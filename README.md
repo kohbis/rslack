@@ -6,7 +6,9 @@
 
 1. Create OAuth Token
     **OAuth & Permissions**
-    1. **User Token Scopes** -> add **channels:read**
+    1. **User Token Scopes**
+        - channels:read
+        - chat:write
     1. **OAuth Tokens & Redirect URLs**
         1. **Install App to Workspace**
         2. **Tokens for Your Workspace** -> copy **OAuth Access Token**

@@ -8,7 +8,7 @@ use super::config::Config;
 #[derive(Deserialize, Debug)]
 pub struct SlackResponce {
     pub ok: bool,
-    pub channels: Vec<SlackChannel>,
+    pub channels: Option<Vec<SlackChannel>>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -24,5 +24,20 @@ pub async fn get_channels(config: &Config) -> Result<Vec<SlackChannel>> {
 
     let res: SlackResponce = client.send().await?.json().await?;
 
-    Ok(res.channels)
+    Ok(res.channels.unwrap())
+}
+
+pub async fn post_message(config: &Config, channel: &String, text: &String) -> Result<SlackResponce> {
+    let body = vec![
+        ("token", &config.token),
+        ("channel", &channel),
+        ("text", &text),
+    ];
+    let url = Url::parse("https://slack.com/api/chat.postMessage").unwrap();
+
+    let client = Client::new().post(url).form(&body);
+
+    let res: SlackResponce = client.send().await?.json().await?;
+
+    Ok(res)
 }
