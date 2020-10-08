@@ -4,20 +4,21 @@ use std::io::{stdin, BufRead};
 
 use rslack::api;
 use rslack::config::Config;
-use rslack::terminal;
+use rslack::console;
 
 #[tokio::main]
 async fn main() {
     let config = Config::new().unwrap();
     let channels = api::get_channels(&config).await.unwrap();
+    let channel_names = channels.iter().map(|channel| channel.name.as_str()).collect::<Vec<&str>>();
 
-    println!("{:?}", channels.iter().map(|channel| channel.name.to_string()).collect::<Vec<String>>());
+    console::print_as_table(&channel_names);
 
     let stdin = stdin();
     let mut lines = stdin.lock().lines();
 
     loop {
-        terminal::prompt("channel > ").unwrap();
+        console::prompt("channel > ").unwrap();
         let channel = match lines.next() {
             Some(Ok(line)) => line,
             Some(Err(e)) => {
@@ -27,7 +28,7 @@ async fn main() {
             None => break,
         };
 
-        terminal::prompt("message > ").unwrap();
+        console::prompt("message > ").unwrap();
         let message = match lines.next() {
             Some(Ok(line)) => line,
             Some(Err(e)) => {

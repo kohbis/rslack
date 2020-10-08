@@ -1,3 +1,3 @@
 pub mod api;
 pub mod config;
-pub mod terminal;
+pub mod console;
