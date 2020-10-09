@@ -30,9 +30,9 @@ fn print_head_channels(size: usize) {
     let margin_left = margin / 2;
     let margin_right = if margin % 2 == 0 { margin_left.clone() } else { margin_left.clone() + 1 };
 
-    println!("{}", row_string(size + 2));
+    println!("|{}|", row_string(size));
     println!("|{}{}{}|", &WHITESPACE.repeat(margin_left), head, &WHITESPACE.repeat(margin_right));
-    println!("{}", row_string(size + 2));
+    println!("|{}|", row_string(size));
 }
 
 pub fn prompt(s: &str) -> Result<()> {
@@ -66,6 +66,6 @@ pub fn print_as_table(v: &Vec<&str>) {
 
     for row in rows {
         println!("|{}|", row);
-        println!("{}", row_string(row.len() + 2))
+        println!("|{}|", row_string(row.len()))
     }
 }
