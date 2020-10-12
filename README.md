@@ -16,7 +16,7 @@
 1. Setting `.token`
 
     ```bash
-    $ mv .token.yours .token
+    $ mv .token.keep .token
     # overwrite the token
     ```
 
