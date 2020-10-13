@@ -24,4 +24,8 @@
 
 ```bash
 $ cargo run
+
+# Docker
+$ docker build -t rslack .
+$ docker run --rm -ti rslack
 ```
