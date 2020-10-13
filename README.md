@@ -24,8 +24,10 @@
 
 ```bash
 $ cargo run
+```
 
-# Docker
+If you want to run on Docker, exec the following command.
+```bash
 $ docker build -t rslack .
 $ docker run --rm -ti rslack
 ```
