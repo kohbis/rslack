@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use std::fs;
 
 const TOKEN_FILE: &str = ".token";
@@ -14,7 +14,14 @@ impl Config {
             token: String::new(),
         };
 
-        config.token = fs::read_to_string(TOKEN_FILE).unwrap().trim().to_string();
+        match fs::read_to_string(TOKEN_FILE) {
+            Ok(content) => {
+                config.token = content.trim().to_string()
+            },
+            Err(e) => {
+                return Err(anyhow!(e))
+            },
+        }
 
         Ok(config)
     }

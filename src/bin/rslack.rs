@@ -8,7 +8,13 @@ use rslack::console;
 
 #[tokio::main]
 async fn main() {
-    let config = Config::new().unwrap();
+    let config = match Config::new() {
+        Ok(config) => config,
+        Err(e) => {
+            return eprintln!("{}", e);
+        },
+    };
+
     let channels = api::get_channels(&config).await.unwrap();
     let channel_names = channels.iter().map(|channel| channel.name.as_str()).collect::<Vec<&str>>();
 
@@ -19,34 +25,30 @@ async fn main() {
 
     loop {
         console::prompt("channel > ").unwrap();
-        let channel = match lines.next() {
-            Some(Ok(line)) => line,
-            Some(Err(e)) => {
+        let channel = match lines.next().unwrap() {
+            Ok(line) => line,
+            Err(e) => {
                 eprintln!("{}", e);
                 continue
             },
-            None => break,
         };
 
         console::prompt("message > ").unwrap();
-        let message = match lines.next() {
-            Some(Ok(line)) => line,
-            Some(Err(e)) => {
+        let message = match lines.next().unwrap() {
+            Ok(line) => line,
+            Err(e) => {
                 eprintln!("{}", e);
                 continue
             },
-            None => break,
         };
 
         match api::post_message(&config, &channel, &message).await {
             Ok(_) => {
-                println!("#{} {}", channel, message);
-                break
+                break println!("\n[Success] #{} {}\n", channel, message)
             },
             Err(e) => {
-                eprintln!("{}", e);
-                break
-            }
+                break eprintln!("{}", e)
+            },
         }
     }
 }
