@@ -10,8 +10,8 @@ use rslack::console;
 async fn main() {
     let config = match Config::new() {
         Ok(config) => config,
-        Err(e) => {
-            return eprintln!("{}", e);
+        Err(err) => {
+            return eprintln!("{}", err);
         },
     };
 
@@ -27,8 +27,8 @@ async fn main() {
         console::prompt("channel > ").unwrap();
         let channel = match lines.next().unwrap() {
             Ok(line) => line,
-            Err(e) => {
-                eprintln!("{}", e);
+            Err(err) => {
+                eprintln!("{}", err);
                 continue
             },
         };
@@ -36,8 +36,8 @@ async fn main() {
         console::prompt("message > ").unwrap();
         let message = match lines.next().unwrap() {
             Ok(line) => line,
-            Err(e) => {
-                eprintln!("{}", e);
+            Err(err) => {
+                eprintln!("{}", err);
                 continue
             },
         };
@@ -46,8 +46,8 @@ async fn main() {
             Ok(_) => {
                 break println!("\n[Success] #{} {}\n", channel, message)
             },
-            Err(e) => {
-                break eprintln!("{}", e)
+            Err(err) => {
+                break eprintln!("{}", err)
             },
         }
     }

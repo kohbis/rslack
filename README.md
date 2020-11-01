@@ -13,11 +13,10 @@
         1. **Install App to Workspace**
         2. **Tokens for Your Workspace** -> copy **OAuth Access Token**
 
-1. Setting `.token`
+1. Setting OAuth Token
 
     ```bash
-    $ mv .token.keep .token
-    # overwrite the token
+    $ export SLACK_TOKEN=your-token
     ```
 
 ## Usage
@@ -29,5 +28,5 @@ $ cargo run
 If you want to run on Docker, exec the following command.
 ```bash
 $ docker build -t rslack .
-$ docker run --rm -ti rslack
+$ docker run --rm -e SLACK_TOKEN=your-token -ti rslack
 ```

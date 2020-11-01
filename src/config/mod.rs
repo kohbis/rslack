@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
-use std::fs;
+use std::env;
 
-const TOKEN_FILE: &str = ".token";
+const SLACK_TOKEN: &str = "SLACK_TOKEN";
 
 #[derive(Debug)]
 pub struct Config {
@@ -14,12 +14,12 @@ impl Config {
             token: String::new(),
         };
 
-        match fs::read_to_string(TOKEN_FILE) {
-            Ok(content) => {
-                config.token = content.trim().to_string()
+        match env::var(SLACK_TOKEN) {
+            Ok(val) => {
+                config.token = val
             },
-            Err(e) => {
-                return Err(anyhow!(e))
+            Err(err) => {
+                return Err(anyhow!("{}: {}", err, SLACK_TOKEN))
             },
         }
 
