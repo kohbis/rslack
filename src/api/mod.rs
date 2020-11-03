@@ -1,4 +1,4 @@
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use reqwest::Client;
 use serde::Deserialize;
 use url::Url;
@@ -8,6 +8,7 @@ use super::config::Config;
 #[derive(Deserialize, Debug)]
 pub struct SlackResponce {
     pub ok: bool,
+    pub error: Option<String>,
     pub channels: Option<Vec<SlackChannel>>,
 }
 
@@ -24,7 +25,11 @@ pub async fn get_channels(config: &Config) -> Result<Vec<SlackChannel>> {
 
     let res: SlackResponce = client.send().await?.json().await?;
 
-    Ok(res.channels.unwrap())
+    if res.ok {
+        Ok(res.channels.unwrap())
+    } else {
+        Err(anyhow!("{}", res.error.unwrap()))
+    }
 }
 
 pub async fn post_message(config: &Config, channel: &String, text: &String) -> Result<SlackResponce> {
@@ -39,5 +44,9 @@ pub async fn post_message(config: &Config, channel: &String, text: &String) -> R
 
     let res: SlackResponce = client.send().await?.json().await?;
 
-    Ok(res)
+    if res.ok {
+        Ok(res)
+    } else {
+        Err(anyhow!("{}", res.error.unwrap()))
+    }
 }

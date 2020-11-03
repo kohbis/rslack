@@ -15,7 +15,12 @@ async fn main() {
         },
     };
 
-    let channels = api::get_channels(&config).await.unwrap();
+    let channels = match api::get_channels(&config).await {
+        Ok(channels) => channels,
+        Err(err) => {
+            return eprintln!("{}", err);
+        },
+    };
     let channel_names = channels.iter().map(|channel| channel.name.as_str()).collect::<Vec<&str>>();
 
     console::print_as_table(&channel_names);
