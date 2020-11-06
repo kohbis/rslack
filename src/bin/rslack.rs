@@ -24,6 +24,7 @@ async fn main() {
     let channel_names = channels.iter().map(|channel| channel.name.as_str()).collect::<Vec<&str>>();
 
     console::print_as_table(&channel_names);
+    println!();
 
     let stdin = stdin();
     let mut lines = stdin.lock().lines();
@@ -52,7 +53,7 @@ async fn main() {
                 break println!("\n[Success] #{} {}\n", channel, message)
             },
             Err(err) => {
-                break eprintln!("{}", err)
+                break eprintln!("\n{}\n", err)
             },
         }
     }
