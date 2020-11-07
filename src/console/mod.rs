@@ -4,6 +4,7 @@ use std::{mem, fs::File, os::unix::io::IntoRawFd};
 
 const WHITESPACE: &str = " ";
 const HYPHEN: &str = "-";
+const HEAD: &str = "CHANNELS";
 
 fn terminal_size() -> Option<winsize> {
     let fd = if let Ok(file) = File::open("/dev/tty"){
@@ -25,13 +26,12 @@ fn row_string(size: usize) -> String {
 }
 
 fn print_head_channels(size: usize) {
-    let head: &str = "CHANNELS";
-    let margin = size - head.len();
+    let margin = size - HEAD.len();
     let margin_left = margin / 2;
     let margin_right = if margin % 2 == 0 { margin_left.clone() } else { margin_left.clone() + 1 };
 
     println!("|{}|", row_string(size));
-    println!("|{}{}{}|", &WHITESPACE.repeat(margin_left), head, &WHITESPACE.repeat(margin_right));
+    println!("|{}{}{}|", &WHITESPACE.repeat(margin_left), HEAD, &WHITESPACE.repeat(margin_right));
     println!("|{}|", row_string(size));
 }
 
