@@ -1,6 +1,7 @@
 use anyhow::{anyhow, Result};
 use std::env;
-use std::fs;
+use std::fs::File;
+use std::io::{BufRead, BufReader};
 use std::path::Path;
 
 const SLACK_TOKEN: &str = "SLACK_TOKEN";
@@ -38,9 +39,26 @@ impl Config {
     }
 
     fn read_from_file(&mut self) -> Result<&Self> {
-        match fs::read_to_string(TOKEN_FILE) {
-            Ok(content) => self.token = content.trim().to_string(),
-            Err(_) => {},
+        let file = match File::open(TOKEN_FILE) {
+            Ok(file) => file,
+            Err(err) => {
+                return Err(anyhow!(err))
+            },
+        };
+
+        for line in BufReader::new(file).lines() {
+            if let Ok(line) = line {
+                let entries: Vec<_> = line.split("=").map(str::trim).collect();
+
+                if entries.len() == 2 {
+                    let (key, val) = (entries[0].trim(), entries[1].trim().to_string());
+
+                    match key {
+                        SLACK_TOKEN => self.token = val,
+                        _ => {},
+                    }
+                }
+            }
         }
 
         Ok(self)

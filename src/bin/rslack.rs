@@ -11,14 +11,14 @@ async fn main() {
     let config = match Config::new() {
         Ok(config) => config,
         Err(err) => {
-            return eprintln!("{}", err);
+            return eprintln!("{}", err)
         },
     };
 
     let channels = match api::get_channels(&config).await {
         Ok(channels) => channels,
         Err(err) => {
-            return eprintln!("{}", err);
+            return eprintln!("{}", err)
         },
     };
     let channel_names = channels.iter().map(|channel| channel.name.as_str()).collect::<Vec<&str>>();
