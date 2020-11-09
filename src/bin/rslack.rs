@@ -6,9 +6,11 @@ use rslack::api;
 use rslack::config::Config;
 use rslack::console;
 
+const TOKEN_FILE: &str = ".token";
+
 #[tokio::main]
 async fn main() {
-    let config = match Config::new() {
+    let config = match Config::new(TOKEN_FILE) {
         Ok(config) => config,
         Err(err) => {
             return eprintln!("{}", err)

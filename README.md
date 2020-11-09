@@ -36,3 +36,9 @@ If you want to run on Docker, exec the following command.
 $ docker build -t rslack .
 $ docker run --rm -e SLACK_TOKEN=your-token -ti rslack
 ```
+
+## Test
+
+```bash
+$ cargo test -- --test-threads=1
+```
