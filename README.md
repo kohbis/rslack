@@ -17,7 +17,13 @@
 
     ```bash
     $ export SLACK_TOKEN=your-token
+
+    # or
+
+    $ mv .token.keep .token
     ```
+
+    If both are set, use the value of `.token`
 
 ## Usage
 
