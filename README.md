@@ -40,5 +40,5 @@ $ docker run --rm -e SLACK_TOKEN=your-token -ti rslack
 ## Test
 
 ```bash
-$ cargo test -- --test-threads=1
+$ cargo test
 ```
