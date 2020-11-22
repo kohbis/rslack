@@ -76,12 +76,14 @@ impl Config {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
 
     fn setup() {
         env::remove_var(SLACK_TOKEN);
     }
 
     #[test]
+    #[serial]
     fn initialize_with_valid_file() {
         setup();
         let expected = Config {
@@ -92,6 +94,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     #[should_panic]
     fn initialize_with_invalid_file() {
         setup();
@@ -99,6 +102,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn initialize_with_env() {
         setup();
         env::set_var(SLACK_TOKEN, "token-from-env-123");
@@ -110,6 +114,7 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn initialize_with_env_and_file() {
         setup();
         env::set_var(SLACK_TOKEN, "token-from-env-123");
