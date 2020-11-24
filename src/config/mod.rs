@@ -28,6 +28,7 @@ impl Config {
         Ok(config)
     }
 
+    #[allow(clippy::single_match)]
     fn read_from_env(&mut self) -> Result<&Self> {
         match env::var(SLACK_TOKEN) {
             Ok(token) => self.token = token,
@@ -37,6 +38,7 @@ impl Config {
         Ok(self)
     }
 
+    #[allow(clippy::single_match)]
     fn read_from_file(&mut self, filename: &str) -> Result<&Self> {
         let file = match File::open(filename) {
             Ok(file) => file,
@@ -47,7 +49,7 @@ impl Config {
 
         for line in BufReader::new(file).lines() {
             if let Ok(line) = line {
-                let entries: Vec<_> = line.split("=").map(str::trim).collect();
+                let entries: Vec<_> = line.split('=').map(str::trim).collect();
 
                 if entries.len() == 2 {
                     let (key, val) = (entries[0].trim(), entries[1].trim().to_string());
