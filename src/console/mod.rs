@@ -28,7 +28,7 @@ fn row_string(size: usize) -> String {
 fn print_head_channels(size: usize) {
     let margin = size - HEAD.len();
     let margin_left = margin / 2;
-    let margin_right = if margin % 2 == 0 { margin_left.clone() } else { margin_left.clone() + 1 };
+    let margin_right = if margin % 2 == 0 { margin_left } else { margin_left + 1 };
 
     println!("|{}|", row_string(size));
     println!("|{}{}{}|", &WHITESPACE.repeat(margin_left), HEAD, &WHITESPACE.repeat(margin_right));
@@ -38,11 +38,11 @@ fn print_head_channels(size: usize) {
 pub fn prompt(s: &str) -> Result<()> {
     let stdout = stdout();
     let mut stdout = stdout.lock();
-    stdout.write(s.as_bytes())?;
+    stdout.write_all(s.as_bytes())?;
     stdout.flush()
 }
 
-pub fn print_as_table(v: &Vec<&str>) {
+pub fn print_as_table(v: &[&str]) {
     let max_len = v.iter().max_by_key(|name| name.len()).unwrap().len() + 1;
     let ws_width = match terminal_size() {
         Some(ws) => ws.ws_col,

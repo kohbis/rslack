@@ -32,11 +32,11 @@ pub async fn get_channels(config: &Config) -> Result<Vec<SlackChannel>> {
     }
 }
 
-pub async fn post_message(config: &Config, channel: &String, text: &String) -> Result<SlackResponce> {
+pub async fn post_message(config: &Config, channel: &str, text: &str) -> Result<SlackResponce> {
     let body = vec![
+        ("channel", channel),
+        ("text", text),
         ("token", &config.token),
-        ("channel", &channel),
-        ("text", &text),
     ];
     let url = Url::parse("https://slack.com/api/chat.postMessage").unwrap();
 
