@@ -31,32 +31,53 @@ async fn main() {
     let stdin = stdin();
     let mut lines = stdin.lock().lines();
 
+    #[allow(unused_assignments)]
+    let mut channel = String::new();
+    #[warn(unused_assignments)]
     loop {
         console::prompt("channel > ").unwrap();
-        let channel = match lines.next().unwrap() {
-            Ok(line) => line,
+        channel = match lines.next().unwrap() {
+            Ok(line) => {
+                if channel_names.contains(&line.as_str()) {
+                    line
+                } else {
+                    eprintln!("No channel named #{}", line);
+                    continue
+                }
+            },
             Err(err) => {
                 eprintln!("{}", err);
                 continue
             },
         };
 
+        break
+    }
+
+    #[allow(unused_assignments)]
+    let mut message = String::new();
+    #[warn(unused_assignments)]
+    loop {
         console::prompt("message > ").unwrap();
-        let message = match lines.next().unwrap() {
-            Ok(line) => line,
+        message = match lines.next().unwrap() {
+            Ok(line) => {
+                line
+            },
             Err(err) => {
                 eprintln!("{}", err);
                 continue
             },
         };
 
-        match api::post_message(&config, &channel, &message).await {
-            Ok(_) => {
-                break println!("\n[Success] #{} {}\n", channel, message)
-            },
-            Err(err) => {
-                break eprintln!("\n{}\n", err)
-            },
-        }
+        break
+    }
+
+    match api::post_message(&config, &channel, &message).await {
+        Ok(_) => {
+            println!("\n[Success] #{} {}\n", channel, message)
+        },
+        Err(err) => {
+            eprintln!("\n[Failed] {}\n", err)
+        },
     }
 }
