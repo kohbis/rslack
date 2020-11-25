@@ -2,6 +2,7 @@ use libc::{ioctl, winsize, TIOCGWINSZ, STDOUT_FILENO};
 use std::io::{stdout, Result, Write};
 use std::{mem, fs::File, os::unix::io::IntoRawFd};
 
+const BAR: &str = "|";
 const WHITESPACE: &str = " ";
 const HYPHEN: &str = "-";
 const HEAD: &str = "CHANNELS";
@@ -21,8 +22,8 @@ fn terminal_size() -> Option<winsize> {
     }
 }
 
-fn row_string(size: usize) -> String {
-    HYPHEN.repeat(size)
+fn print_line(content: &str) {
+    println!("{}{}{}", BAR, content, BAR)
 }
 
 fn print_head_channels(size: usize) {
@@ -30,9 +31,16 @@ fn print_head_channels(size: usize) {
     let margin_left = margin / 2;
     let margin_right = if margin % 2 == 0 { margin_left } else { margin_left + 1 };
 
-    println!("|{}|", row_string(size));
-    println!("|{}{}{}|", &WHITESPACE.repeat(margin_left), HEAD, &WHITESPACE.repeat(margin_right));
-    println!("|{}|", row_string(size));
+    let horizontal_rule = horizontal_rule(size);
+    let head = [&WHITESPACE.repeat(margin_left), HEAD, &WHITESPACE.repeat(margin_right)].concat();
+
+    print_line(&horizontal_rule);
+    print_line(&head);
+    print_line(&horizontal_rule);
+}
+
+fn horizontal_rule(size: usize) -> String {
+    HYPHEN.repeat(size)
 }
 
 pub fn prompt(s: &str) -> Result<()> {
@@ -42,15 +50,15 @@ pub fn prompt(s: &str) -> Result<()> {
     stdout.flush()
 }
 
-pub fn print_as_table(v: &[&str]) {
-    let max_len = v.iter().max_by_key(|name| name.len()).unwrap().len() + 1;
+pub fn print_as_table(channels: &[&str]) {
+    let max_len = channels.iter().max_by_key(|name| name.len()).unwrap().len() + 1;
     let ws_width = match terminal_size() {
         Some(ws) => ws.ws_col,
         None => 100
     };
     let col = ws_width as usize / (max_len + 2);
 
-    let rows = v
+    let rows = channels
                 .chunks(col)
                 .map(|chunk| {
                     chunk.iter()
@@ -58,14 +66,14 @@ pub fn print_as_table(v: &[&str]) {
                             cell.to_string() + &WHITESPACE.repeat(max_len - cell.len())
                         })
                         .collect::<Vec<_>>()
-                        .join("|")
+                        .join(BAR)
                 })
                 .collect::<Vec<_>>();
 
     print_head_channels(rows[0].len());
 
     for row in rows {
-        println!("|{}|", row);
-        println!("|{}|", row_string(row.len()))
+        print_line(&row);
+        print_line(&horizontal_rule(row.len()));
     }
 }
