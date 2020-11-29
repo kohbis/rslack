@@ -5,11 +5,21 @@ use std::io::{stdin, BufRead};
 use rslack::api;
 use rslack::config::Config;
 use rslack::console;
+use rslack::option::Opt;
 
 const TOKEN_FILE: &str = ".token";
 
 #[tokio::main]
 async fn main() {
+    let opts = Opt::get_opts();
+
+    println!("{:?}", opts);
+
+    #[allow(unused_assignments)]
+    let mut channel = opts.channel;
+    #[allow(unused_assignments)]
+    let mut message = opts.message;
+
     let config = match Config::new(TOKEN_FILE) {
         Ok(config) => config,
         Err(err) => {
@@ -25,16 +35,19 @@ async fn main() {
     };
     let channel_names = channels.iter().map(|channel| channel.name.as_str()).collect::<Vec<&str>>();
 
-    console::print_as_table(&channel_names);
-    println!();
-
     let stdin = stdin();
     let mut lines = stdin.lock().lines();
 
-    #[allow(unused_assignments)]
-    let mut channel = String::new();
-    #[warn(unused_assignments)]
     loop {
+        if channel_names.contains(&channel.as_str()) {
+            break
+        } else if !channel.trim().is_empty() {
+            eprintln!("No channel named #{}", channel)
+        }
+
+        console::print_as_table(&channel_names);
+        println!();
+
         console::prompt("channel > ").unwrap();
         channel = match lines.next().unwrap() {
             Ok(line) => {
@@ -54,22 +67,21 @@ async fn main() {
         break
     }
 
-    #[allow(unused_assignments)]
-    let mut message = String::new();
-    #[warn(unused_assignments)]
-    loop {
-        console::prompt("message > ").unwrap();
-        message = match lines.next().unwrap() {
-            Ok(line) => {
-                line
-            },
-            Err(err) => {
-                eprintln!("{}", err);
-                continue
-            },
-        };
+    if message.is_empty() {
+        loop {
+            console::prompt("message > ").unwrap();
+            message = match lines.next().unwrap() {
+                Ok(line) => {
+                    line
+                },
+                Err(err) => {
+                    eprintln!("{}", err);
+                    continue
+                },
+            };
 
-        break
+            break
+        }
     }
 
     match api::post_message(&config, &channel, &message).await {
