@@ -1,26 +1,19 @@
 extern crate rslack;
 
-use structopt::StructOpt;
 use std::io::{stdin, BufRead};
 
 use rslack::api;
 use rslack::config::Config;
 use rslack::console;
+use rslack::option::Opt;
 
 const TOKEN_FILE: &str = ".token";
 
-#[derive(Debug, StructOpt)]
-struct Opt {
-    #[structopt(short, long, default_value = "")]
-    channel: String,
-
-    #[structopt(short, long, default_value = "")]
-    message: String,
-}
-
 #[tokio::main]
 async fn main() {
-    let opts = Opt::from_args();
+    let opts = Opt::get_opts();
+
+    println!("{:?}", opts);
 
     #[allow(unused_assignments)]
     let mut channel = opts.channel;
@@ -48,10 +41,8 @@ async fn main() {
     loop {
         if channel_names.contains(&channel.as_str()) {
             break
-        } else {
-            if !channel.trim().is_empty() {
-                eprintln!("No channel named #{}", channel)
-            }
+        } else if !channel.trim().is_empty() {
+            eprintln!("No channel named #{}", channel)
         }
 
         console::print_as_table(&channel_names);
