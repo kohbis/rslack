@@ -1,5 +1,3 @@
-extern crate rslack;
-
 use std::io::{stdin, BufRead};
 
 use rslack::api;
@@ -12,8 +10,6 @@ const TOKEN_FILE: &str = ".token";
 #[tokio::main]
 async fn main() {
     let opts = Opt::get_opts();
-
-    println!("{:?}", opts);
 
     #[allow(unused_assignments)]
     let mut channel = opts.channel;
