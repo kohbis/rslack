@@ -32,7 +32,7 @@ impl Config {
     fn read_from_env(&mut self) -> Result<&Self> {
         match env::var(SLACK_TOKEN) {
             Ok(token) => self.token = token,
-            Err(_) => {},
+            Err(_) => {}
         }
 
         Ok(self)
@@ -42,9 +42,7 @@ impl Config {
     fn read_from_file(&mut self, filename: &str) -> Result<&Self> {
         let file = match File::open(filename) {
             Ok(file) => file,
-            Err(err) => {
-                return Err(anyhow!(err))
-            },
+            Err(err) => return Err(anyhow!(err)),
         };
 
         for line in BufReader::new(file).lines() {
@@ -56,7 +54,7 @@ impl Config {
 
                     match key {
                         SLACK_TOKEN => self.token = val,
-                        _ => {},
+                        _ => {}
                     }
                 }
             }
@@ -67,13 +65,12 @@ impl Config {
 
     fn validate(&mut self) -> Result<()> {
         if self.token.is_empty() {
-            return Err(anyhow!("{} not found.", SLACK_TOKEN))
+            return Err(anyhow!("{} not found.", SLACK_TOKEN));
         }
 
         Ok(())
     }
 }
-
 
 #[cfg(test)]
 mod tests {
