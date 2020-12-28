@@ -18,25 +18,24 @@ async fn main() {
 
     let config = match Config::new(TOKEN_FILE) {
         Ok(config) => config,
-        Err(err) => {
-            return eprintln!("{}", err)
-        },
+        Err(err) => return eprintln!("{}", err),
     };
 
     let channels = match api::get_channels(&config).await {
         Ok(channels) => channels,
-        Err(err) => {
-            return eprintln!("{}", err)
-        },
+        Err(err) => return eprintln!("{}", err),
     };
-    let channel_names = channels.iter().map(|channel| channel.name.as_str()).collect::<Vec<&str>>();
+    let channel_names = channels
+        .iter()
+        .map(|channel| channel.name.as_str())
+        .collect::<Vec<&str>>();
 
     let stdin = stdin();
     let mut lines = stdin.lock().lines();
 
     loop {
         if channel_names.contains(&channel.as_str()) {
-            break
+            break;
         } else if !channel.trim().is_empty() {
             eprintln!("No channel named #{}", channel)
         }
@@ -51,41 +50,39 @@ async fn main() {
                     line
                 } else {
                     eprintln!("No channel named #{}", line);
-                    continue
+                    continue;
                 }
-            },
+            }
             Err(err) => {
                 eprintln!("{}", err);
-                continue
-            },
+                continue;
+            }
         };
 
-        break
+        break;
     }
 
     if message.is_empty() {
         loop {
             console::prompt("message > ").unwrap();
             message = match lines.next().unwrap() {
-                Ok(line) => {
-                    line
-                },
+                Ok(line) => line,
                 Err(err) => {
                     eprintln!("{}", err);
-                    continue
-                },
+                    continue;
+                }
             };
 
-            break
+            break;
         }
     }
 
     match api::post_message(&config, &channel, &message).await {
         Ok(_) => {
             println!("\n[Success] #{} {}\n", channel, message)
-        },
+        }
         Err(err) => {
             eprintln!("\n[Failed] {}\n", err)
-        },
+        }
     }
 }

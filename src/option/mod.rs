@@ -15,7 +15,6 @@ impl Opt {
     }
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
