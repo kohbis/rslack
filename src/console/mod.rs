@@ -77,3 +77,17 @@ pub fn print_as_table(channels: &[&str]) {
         print_line(&horizontal_rule(row.len()));
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn horizontal_rule_with_size() {
+        let size = 5;
+        let expected  = "-----".to_string();
+        let actual = horizontal_rule(size);
+        assert_eq!(expected, actual)
+    }
+}
