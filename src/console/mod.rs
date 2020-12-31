@@ -93,8 +93,8 @@ mod tests {
     #[test]
     fn horizontal_rule_with_size() {
         let size = 5;
-        let expected = "-----".to_string();
         let actual = horizontal_rule(size);
-        assert_eq!(expected, actual)
+        let expected = "-----".to_string();
+        assert_eq!(actual, expected)
     }
 }

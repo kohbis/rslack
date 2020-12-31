@@ -85,11 +85,11 @@ mod tests {
     #[serial]
     fn initialize_with_valid_file() {
         setup();
+        let actual = Config::new("tests/token.test.valid").unwrap();
         let expected = Config {
             token: String::from("token-from-file-123"),
         };
-        let actual = Config::new("tests/token.test.valid").unwrap();
-        assert_eq!(expected, actual);
+        assert_eq!(actual, expected);
     }
 
     #[test]
@@ -105,11 +105,20 @@ mod tests {
     fn initialize_with_env() {
         setup();
         env::set_var(SLACK_TOKEN, "token-from-env-123");
+        let actual = Config::new("no_file").unwrap();
         let expected = Config {
             token: String::from("token-from-env-123"),
         };
-        let actual = Config::new("no_file").unwrap();
-        assert_eq!(expected, actual)
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    #[serial]
+    #[should_panic]
+    fn initialize_with_empty_env() {
+        setup();
+        env::set_var(SLACK_TOKEN, "");
+        Config::new("no_file").unwrap();
     }
 
     #[test]
@@ -121,6 +130,24 @@ mod tests {
             token: String::from("token-from-file-123"),
         };
         let actual = Config::new("tests/token.test.valid").unwrap();
-        assert_eq!(expected, actual)
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn valid_token() {
+        let mut config = Config {
+            token: String::from("token"),
+        };
+        let actual = config.validate();
+        assert!(actual.is_ok())
+    }
+
+    #[test]
+    fn invalid_token() {
+        let mut config = Config {
+            token: String::new(),
+        };
+        let actual = config.validate();
+        assert!(actual.is_err())
     }
 }

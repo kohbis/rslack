@@ -22,11 +22,11 @@ mod tests {
     #[test]
     fn argument_with_default() {
         assert_eq!(
-            Opt::get_opts(),
             Opt {
                 channel: "".to_string(),
                 message: "".to_string()
-            }
+            },
+            Opt::get_opts(),
         )
     }
 }
