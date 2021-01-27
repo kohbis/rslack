@@ -22,11 +22,11 @@ fn terminal_size() -> Option<winsize> {
     }
 }
 
-fn print_line(content: &str) {
-    println!("{}{}{}", BAR, content, BAR)
+fn print_line(stdout: &mut dyn Write, content: &str) {
+    writeln!(stdout, "{}{}{}", BAR, content, BAR).unwrap()
 }
 
-fn print_head_channels(size: usize) {
+fn print_head_channels(stdout: &mut dyn Write, size: usize) {
     let margin = size - HEAD.len();
     let margin_left = margin / 2;
     let margin_right = if margin % 2 == 0 {
@@ -43,9 +43,9 @@ fn print_head_channels(size: usize) {
     ]
     .concat();
 
-    print_line(&horizontal_rule);
-    print_line(&head);
-    print_line(&horizontal_rule);
+    print_line(stdout, &horizontal_rule);
+    print_line(stdout, &head);
+    print_line(stdout, &horizontal_rule);
 }
 
 fn horizontal_rule(size: usize) -> String {
@@ -55,11 +55,15 @@ fn horizontal_rule(size: usize) -> String {
 pub fn prompt(s: &str) -> Result<()> {
     let stdout = stdout();
     let mut stdout = stdout.lock();
+
     stdout.write_all(s.as_bytes())?;
     stdout.flush()
 }
 
 pub fn print_as_table(channels: &[&str]) {
+    let stdout = stdout();
+    let mut stdout = stdout.lock();
+
     let max_len = channels.iter().max_by_key(|name| name.len()).unwrap().len() + 1;
     let ws_width = match terminal_size() {
         Some(ws) => ws.ws_col,
@@ -78,11 +82,11 @@ pub fn print_as_table(channels: &[&str]) {
         })
         .collect::<Vec<_>>();
 
-    print_head_channels(rows[0].len());
+    print_head_channels(&mut stdout, rows[0].len());
 
     for row in rows {
-        print_line(&row);
-        print_line(&horizontal_rule(row.len()));
+        print_line(&mut stdout, &row);
+        print_line(&mut stdout, &horizontal_rule(row.len()));
     }
 }
 
