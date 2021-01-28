@@ -95,6 +95,14 @@ mod tests {
     use super::*;
 
     #[test]
+    fn print_string_between_bars() {
+        let mut stdout = Vec::new();
+        print_line(&mut stdout, "string");
+
+        assert_eq!(stdout, b"|string|\n")
+    }
+
+    #[test]
     fn horizontal_rule_with_size() {
         let size = 5;
         let actual = horizontal_rule(size);
