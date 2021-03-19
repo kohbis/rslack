@@ -43,7 +43,7 @@ async fn main() {
         console::print_as_table(&channel_names);
         println!();
 
-        console::prompt("channel > ").unwrap();
+        console::prompt("channel# ").unwrap();
         channel = match lines.next().unwrap() {
             Ok(line) => {
                 if channel_names.contains(&line.as_str()) {
@@ -64,7 +64,7 @@ async fn main() {
 
     if message.is_empty() {
         loop {
-            console::prompt("message > ").unwrap();
+            console::prompt("message# ").unwrap();
             message = match lines.next().unwrap() {
                 Ok(line) => line,
                 Err(err) => {
