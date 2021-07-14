@@ -37,17 +37,17 @@ fn get_filetype_from_path(path: &str) -> &str {
     let path = Path::new(path);
     match path.extension().and_then(OsStr::to_str) {
         Some(ext) => {
-            if let Some(filetype) =  FILETYPE_MAP.get(ext) {
+            if let Some(filetype) = FILETYPE_MAP.get(ext) {
                 return filetype;
             }
-        },
+        }
         _ => {
             if let Some(filename) = path.file_name().and_then(OsStr::to_str) {
                 if let Some(filetype) = FILETYPE_MAP.get(filename) {
                     return filetype;
                 }
             }
-        },
+        }
     }
 
     &"text"
@@ -109,7 +109,6 @@ pub async fn upload_file(config: &Config, channel: &str, path: &str) -> Result<S
         Err(anyhow!("{}", res.error.unwrap()))
     }
 }
-
 
 #[cfg(test)]
 mod tests {
