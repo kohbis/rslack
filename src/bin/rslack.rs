@@ -76,7 +76,7 @@ async fn main() {
                 }
 
                 line
-            },
+            }
             Err(err) => {
                 eprintln!("{}", err);
                 continue;
