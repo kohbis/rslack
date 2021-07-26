@@ -62,19 +62,28 @@ async fn main() {
         break;
     }
 
-    if message.is_empty() {
-        loop {
-            console::prompt("message > ").unwrap();
-            message = match lines.next().unwrap() {
-                Ok(line) => line,
-                Err(err) => {
-                    eprintln!("{}", err);
-                    continue;
-                }
-            };
-
+    loop {
+        if !message.trim().is_empty() {
             break;
         }
+
+        console::prompt("message > ").unwrap();
+        message = match lines.next().unwrap() {
+            Ok(line) => {
+                if line.trim().is_empty() {
+                    eprintln!("Message is empty\n");
+                    continue;
+                }
+
+                line
+            }
+            Err(err) => {
+                eprintln!("{}", err);
+                continue;
+            }
+        };
+
+        break;
     }
 
     match api::post_message(&config, &channel, &message).await {
