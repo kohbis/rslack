@@ -37,19 +37,19 @@ async fn main() {
         if channel_names.contains(&channel.as_str()) {
             break;
         } else if !channel.trim().is_empty() {
-            eprintln!("No channel named #{}", channel)
+            eprintln!("No channel named #{}\n", channel)
         }
 
         console::print_as_table(&channel_names);
         println!();
 
-        console::prompt("channel# ").unwrap();
+        console::prompt("channel # ").unwrap();
         channel = match lines.next().unwrap() {
             Ok(line) => {
                 if channel_names.contains(&line.as_str()) {
                     line
                 } else {
-                    eprintln!("No channel named #{}", line);
+                    eprintln!("No channel named #{}\n", line);
                     continue;
                 }
             }
@@ -64,7 +64,7 @@ async fn main() {
 
     if message.is_empty() {
         loop {
-            console::prompt("message# ").unwrap();
+            console::prompt("message > ").unwrap();
             message = match lines.next().unwrap() {
                 Ok(line) => line,
                 Err(err) => {

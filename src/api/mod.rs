@@ -6,7 +6,7 @@ use url::Url;
 use super::config::Config;
 
 #[derive(Deserialize, Debug)]
-pub struct SlackResponce {
+pub struct SlackResponse {
     pub ok: bool,
     pub error: Option<String>,
     pub channels: Option<Vec<SlackChannel>>,
@@ -23,7 +23,7 @@ pub async fn get_channels(config: &Config) -> Result<Vec<SlackChannel>> {
 
     let client = Client::new().get(url);
 
-    let res: SlackResponce = client.send().await?.json().await?;
+    let res: SlackResponse = client.send().await?.json().await?;
 
     if res.ok {
         Ok(res.channels.unwrap())
@@ -32,7 +32,7 @@ pub async fn get_channels(config: &Config) -> Result<Vec<SlackChannel>> {
     }
 }
 
-pub async fn post_message(config: &Config, channel: &str, text: &str) -> Result<SlackResponce> {
+pub async fn post_message(config: &Config, channel: &str, text: &str) -> Result<SlackResponse> {
     let body = vec![
         ("channel", channel),
         ("text", text),
@@ -42,7 +42,7 @@ pub async fn post_message(config: &Config, channel: &str, text: &str) -> Result<
 
     let client = Client::new().post(url).form(&body);
 
-    let res: SlackResponce = client.send().await?.json().await?;
+    let res: SlackResponse = client.send().await?.json().await?;
 
     if res.ok {
         Ok(res)
