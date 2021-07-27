@@ -40,13 +40,16 @@ async fn main() {
             eprintln!("No channel named #{}\n", channel)
         }
 
-        console::print_as_table(&channel_names);
+        console::print_as_table(&channel_names, &channel);
         println!();
 
         console::prompt("channel # ").unwrap();
         channel = match lines.next().unwrap() {
             Ok(line) => {
                 if channel_names.contains(&line.as_str()) {
+                    console::print_as_table(&channel_names, &line);
+                    println!();
+
                     line
                 } else {
                     eprintln!("No channel named #{}\n", line);

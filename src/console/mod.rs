@@ -1,6 +1,7 @@
 use libc::{ioctl, winsize, STDOUT_FILENO, TIOCGWINSZ};
 use std::io::{stdout, Result, Write};
 use std::{fs::File, mem, os::unix::io::IntoRawFd};
+use termion::color;
 
 const BAR: &str = "|";
 const WHITESPACE: &str = " ";
@@ -22,7 +23,7 @@ fn terminal_size() -> Option<winsize> {
     }
 }
 
-fn print_line(stdout: &mut dyn Write, content: &str) {
+fn print_row(stdout: &mut dyn Write, content: &str) {
     writeln!(stdout, "{}{}{}", BAR, content, BAR).unwrap()
 }
 
@@ -43,9 +44,9 @@ fn print_head_channels(stdout: &mut dyn Write, size: usize) {
     ]
     .concat();
 
-    print_line(stdout, &horizontal_rule);
-    print_line(stdout, &head);
-    print_line(stdout, &horizontal_rule);
+    print_row(stdout, &horizontal_rule);
+    print_row(stdout, &head);
+    print_row(stdout, &horizontal_rule);
 }
 
 fn horizontal_rule(size: usize) -> String {
@@ -60,9 +61,17 @@ pub fn prompt(s: &str) -> Result<()> {
     stdout.flush()
 }
 
-pub fn print_as_table(channels: &[&str]) {
+pub fn print_as_table(channels: &[&str], selected: &str) {
     let stdout = stdout();
     let mut stdout = stdout.lock();
+
+    write!(
+        stdout,
+        "{}{}",
+        termion::clear::All,
+        termion::cursor::Goto(1, 1)
+    )
+    .unwrap();
 
     let max_len = channels.iter().max_by_key(|name| name.len()).unwrap().len() + 1;
     let ws_width = match terminal_size() {
@@ -74,19 +83,44 @@ pub fn print_as_table(channels: &[&str]) {
     let rows = channels
         .chunks(col)
         .map(|chunk| {
-            chunk
-                .iter()
-                .map(|cell| cell.to_string() + &WHITESPACE.repeat(max_len - cell.len()))
-                .collect::<Vec<_>>()
-                .join(BAR)
-        })
-        .collect::<Vec<_>>();
+            (
+                chunk.len() * (max_len + 2) - 1,
+                chunk
+                    .into_iter()
+                    .map(|&cell| {
+                        let (fg_color, bg_color) = if cell == selected {
+                            (
+                                color::Fg(color::Black).to_string(),
+                                color::Bg(color::Blue).to_string(),
+                            )
+                        } else {
+                            (
+                                color::Fg(color::Reset).to_string(),
+                                color::Bg(color::Reset).to_string(),
+                            )
+                        };
 
-    print_head_channels(&mut stdout, rows[0].len());
+                        format!(
+                            "{}{}{}{}{}{}{}",
+                            WHITESPACE,
+                            bg_color,
+                            fg_color,
+                            cell.to_string(),
+                            color::Fg(color::Reset),
+                            color::Bg(color::Reset),
+                            &WHITESPACE.repeat(max_len - cell.len())
+                        )
+                    })
+                    .collect::<Vec<_>>(),
+            )
+        })
+        .collect::<Vec<(usize, Vec<String>)>>();
+
+    print_head_channels(&mut stdout, rows[0].0);
 
     for row in rows {
-        print_line(&mut stdout, &row);
-        print_line(&mut stdout, &horizontal_rule(row.len()));
+        print_row(&mut stdout, &row.1.join(BAR));
+        print_row(&mut stdout, &horizontal_rule(row.0));
     }
 }
 
@@ -97,7 +131,7 @@ mod tests {
     #[test]
     fn print_string_between_bars() {
         let mut stdout = Vec::new();
-        print_line(&mut stdout, "string");
+        print_row(&mut stdout, "string");
 
         assert_eq!(stdout, b"|string|\n")
     }
