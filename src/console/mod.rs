@@ -1,30 +1,17 @@
-use libc::{ioctl, winsize, STDOUT_FILENO, TIOCGWINSZ};
 use std::io::{stdout, Result, Write};
-use std::{fs::File, mem, os::unix::io::IntoRawFd};
+
 use termion::color;
+use termion::raw::IntoRawMode;
+use termion::terminal_size;
 
 const BAR: &str = "|";
 const WHITESPACE: &str = " ";
 const HYPHEN: &str = "-";
 const HEAD: &str = "CHANNELS";
 
-fn terminal_size() -> Option<winsize> {
-    let fd = if let Ok(file) = File::open("/dev/tty") {
-        file.into_raw_fd()
-    } else {
-        STDOUT_FILENO
-    };
-
-    let mut ws: winsize = unsafe { mem::zeroed() };
-    if unsafe { ioctl(fd, TIOCGWINSZ, &mut ws) } == -1 {
-        None
-    } else {
-        Some(ws)
-    }
-}
-
 fn print_row(stdout: &mut dyn Write, content: &str) {
-    writeln!(stdout, "{}{}{}", BAR, content, BAR).unwrap()
+    write!(stdout, "{}{}{}", BAR, content, BAR).unwrap();
+    write!(stdout, "\r\n").unwrap();
 }
 
 fn print_head_channels(stdout: &mut dyn Write, size: usize) {
@@ -54,29 +41,28 @@ fn horizontal_rule(size: usize) -> String {
 }
 
 pub fn prompt(s: &str) -> Result<()> {
-    let stdout = stdout();
-    let mut stdout = stdout.lock();
+    let mut stdout = stdout().into_raw_mode().unwrap();
 
-    stdout.write_all(s.as_bytes())?;
+    write!(stdout, "{}", s)?;
     stdout.flush()
 }
 
 pub fn print_as_table(channels: &[&str], selected: &str) {
-    let stdout = stdout();
-    let mut stdout = stdout.lock();
+    let mut stdout = stdout().into_raw_mode().unwrap();
 
     write!(
         stdout,
         "{}{}",
-        termion::clear::All,
-        termion::cursor::Goto(1, 1)
+        termion::cursor::Goto(1, 1),
+        termion::clear::All
     )
     .unwrap();
 
     let max_len = channels.iter().max_by_key(|name| name.len()).unwrap().len() + 1;
-    let ws_width = match terminal_size() {
-        Some(ws) => ws.ws_col,
-        None => 100,
+    let ws_width = if let Ok((width, _height)) = terminal_size() {
+        width
+    } else {
+        100
     };
     let col = ws_width as usize / (max_len + 2);
 
@@ -133,7 +119,7 @@ mod tests {
         let mut stdout = Vec::new();
         print_row(&mut stdout, "string");
 
-        assert_eq!(stdout, b"|string|\n")
+        assert_eq!(stdout, b"|string|\r\n")
     }
 
     #[test]
