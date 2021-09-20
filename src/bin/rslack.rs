@@ -30,7 +30,9 @@ async fn main() {
         .map(|channel| channel.name.as_str())
         .collect::<Vec<&str>>();
 
+    #[rustfmt::skip]
     let max_len = channel_names.iter().max_by_key(|name| name.len()).unwrap().len() + 1;
+
     let col_count = console::term_size().0 as usize / (max_len + 2);
     let chunked_datas: Vec<&[&str]> = channel_names.chunks(col_count).collect();
 
