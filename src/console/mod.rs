@@ -54,7 +54,7 @@ pub fn prompt(s: &str) -> Result<()> {
     stdout.flush()
 }
 
-pub fn print_as_table(channel_names: &Vec<&[&str]>, max_len: usize, selected: &str) {
+pub fn print_as_table(channel_names: &Vec<Vec<&str>>, max_len: usize, selected: &str) {
     let mut stdout = stdout().into_raw_mode().unwrap();
 
     write!(
@@ -90,7 +90,7 @@ pub fn print_as_table(channel_names: &Vec<&[&str]>, max_len: usize, selected: &s
                             bg_color,
                             WHITESPACE,
                             fg_color,
-                            cell.to_string(),
+                            cell,
                             color::Fg(color::Reset),
                             &WHITESPACE.repeat(max_len - cell.len()),
                             color::Bg(color::Reset),
@@ -107,6 +107,8 @@ pub fn print_as_table(channel_names: &Vec<&[&str]>, max_len: usize, selected: &s
         print_row(&mut stdout, &row.1.join(BAR));
         print_row(&mut stdout, &horizontal_rule(row.0));
     }
+
+    stdout.flush().unwrap()
 }
 
 #[cfg(test)]
