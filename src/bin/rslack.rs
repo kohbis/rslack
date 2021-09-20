@@ -37,7 +37,7 @@ async fn main() {
         if channel_names.contains(&channel.as_str()) {
             break;
         } else if !channel.trim().is_empty() {
-            eprintln!("No channel named #{}\n", channel)
+            eprintln!("No channel named #{}", channel)
         }
 
         console::print_as_table(&channel_names, &channel);
@@ -52,7 +52,7 @@ async fn main() {
 
                     line
                 } else {
-                    eprintln!("No channel named #{}\n", line);
+                    eprintln!("No channel named #{}", line);
                     continue;
                 }
             }
@@ -74,7 +74,7 @@ async fn main() {
         message = match lines.next().unwrap() {
             Ok(line) => {
                 if line.trim().is_empty() {
-                    eprintln!("Message is empty\n");
+                    eprintln!("Message is empty");
                     continue;
                 }
 
@@ -91,10 +91,10 @@ async fn main() {
 
     match api::post_message(&config, &channel, &message).await {
         Ok(_) => {
-            println!("\n[Success] #{} {}\n", channel, message)
+            println!("[Success] #{} {}", channel, message)
         }
         Err(err) => {
-            eprintln!("\n[Failed] {}\n", err)
+            eprintln!("[Failed] {}", err)
         }
     }
 }

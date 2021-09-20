@@ -88,13 +88,13 @@ pub fn print_as_table(channels: &[&str], selected: &str) {
 
                         format!(
                             "{}{}{}{}{}{}{}",
-                            WHITESPACE,
                             bg_color,
+                            WHITESPACE,
                             fg_color,
                             cell.to_string(),
                             color::Fg(color::Reset),
+                            &WHITESPACE.repeat(max_len - cell.len()),
                             color::Bg(color::Reset),
-                            &WHITESPACE.repeat(max_len - cell.len())
                         )
                     })
                     .collect::<Vec<_>>(),
