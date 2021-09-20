@@ -30,6 +30,14 @@ async fn main() {
         .map(|channel| channel.name.as_str())
         .collect::<Vec<&str>>();
 
+    #[rustfmt::skip]
+    let max_len = channel_names.iter().max_by_key(|name| name.len()).unwrap().len() + 1;
+
+    let col_count = console::term_size().0 as usize / (max_len + 2);
+    let chunked_datas: Vec<&[&str]> = channel_names.chunks(col_count).collect();
+
+    console::print_as_table(&chunked_datas, max_len, &channel);
+
     let stdin = stdin();
     let mut lines = stdin.lock().lines();
 
@@ -40,15 +48,13 @@ async fn main() {
             eprintln!("No channel named #{}", channel)
         }
 
-        console::print_as_table(&channel_names, &channel);
-        println!();
+        console::print_as_table(&chunked_datas, max_len, &channel);
 
         console::prompt("channel # ").unwrap();
         channel = match lines.next().unwrap() {
             Ok(line) => {
                 if channel_names.contains(&line.as_str()) {
-                    console::print_as_table(&channel_names, &line);
-                    println!();
+                    console::print_as_table(&chunked_datas, max_len, &line);
 
                     line
                 } else {
