@@ -40,6 +40,13 @@ fn horizontal_rule(size: usize) -> String {
     HYPHEN.repeat(size)
 }
 
+pub fn term_size() -> (u16, u16) {
+    match terminal_size() {
+        Ok((width, height)) => (width, height),
+        _ => (100, 100),
+    }
+}
+
 pub fn prompt(s: &str) -> Result<()> {
     let mut stdout = stdout().into_raw_mode().unwrap();
 
@@ -47,7 +54,7 @@ pub fn prompt(s: &str) -> Result<()> {
     stdout.flush()
 }
 
-pub fn print_as_table(channels: &[&str], selected: &str) {
+pub fn print_as_table(channel_names: &Vec<&[&str]>, max_len: usize, selected: &str) {
     let mut stdout = stdout().into_raw_mode().unwrap();
 
     write!(
@@ -58,20 +65,12 @@ pub fn print_as_table(channels: &[&str], selected: &str) {
     )
     .unwrap();
 
-    let max_len = channels.iter().max_by_key(|name| name.len()).unwrap().len() + 1;
-    let ws_width = if let Ok((width, _height)) = terminal_size() {
-        width
-    } else {
-        100
-    };
-    let col = ws_width as usize / (max_len + 2);
-
-    let rows = channels
-        .chunks(col)
-        .map(|chunk| {
+    let rows = channel_names
+        .iter()
+        .map(|names| {
             (
-                chunk.len() * (max_len + 2) - 1,
-                chunk
+                names.len() * (max_len + 2) - 1,
+                names
                     .into_iter()
                     .map(|&cell| {
                         let (fg_color, bg_color) = if cell == selected {
