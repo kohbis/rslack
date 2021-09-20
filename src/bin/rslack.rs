@@ -59,7 +59,7 @@ async fn main() {
                         current.1 -= 1;
                     }
                 }
-                Key::Right | Key::Char('j') => {
+                Key::Right | Key::Char('l') => {
                     if current.1 < chunked_datas[current.0].len() - 1 {
                         current.1 += 1;
                     }
@@ -69,7 +69,7 @@ async fn main() {
                         current.0 -= 1;
                     }
                 }
-                Key::Down | Key::Char('l') => {
+                Key::Down | Key::Char('j') => {
                     if current.0 < chunked_datas.len() - 1
                         && current.1 <= chunked_datas[current.0 + 1].len() - 1
                     {
