@@ -65,7 +65,7 @@ pub fn print_as_table(channel_names: &Vec<Vec<&str>>, max_len: usize, selected: 
     )
     .unwrap();
 
-    let rows = channel_names
+    let rows: Vec<(usize, Vec<String>)> = channel_names
         .iter()
         .map(|names| {
             (
@@ -99,7 +99,7 @@ pub fn print_as_table(channel_names: &Vec<Vec<&str>>, max_len: usize, selected: 
                     .collect::<Vec<_>>(),
             )
         })
-        .collect::<Vec<(usize, Vec<String>)>>();
+        .collect();
 
     print_head_channels(&mut stdout, rows[0].0);
 
