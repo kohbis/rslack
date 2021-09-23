@@ -15,9 +15,7 @@ const TOKEN_FILE: &str = ".token";
 async fn main() {
     let opts = Opt::get_opts();
 
-    #[allow(unused_assignments)]
     let mut channel = opts.channel;
-    #[allow(unused_assignments)]
     let mut message = opts.message;
 
     let config = match Config::new(TOKEN_FILE) {
@@ -29,10 +27,10 @@ async fn main() {
         Ok(channels) => channels,
         Err(err) => return eprintln!("{}", err),
     };
-    let channel_names = channels
+    let channel_names: Vec<&str> = channels
         .iter()
         .map(|channel| channel.name.as_str())
-        .collect::<Vec<&str>>();
+        .collect();
 
     #[rustfmt::skip]
     let max_len = channel_names.iter().max_by_key(|name| name.len()).unwrap().len() + 1;
