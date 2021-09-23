@@ -1,8 +1,9 @@
-use std::io::{stdin, stdout, BufRead};
+use std::io::{stdin, stdout, Write};
 
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
+use termion::screen::AlternateScreen;
 
 use rslack::api;
 use rslack::config::Config;
@@ -40,13 +41,16 @@ async fn main() {
         .map(|chunk| chunk.to_vec())
         .collect();
 
+    let stdout = stdout().into_raw_mode().unwrap();
+    // Switch screen from Main to Alternate
+    let mut stdout = AlternateScreen::from(stdout);
+
     if channel.trim().is_empty() || !channel_names.contains(&channel.as_str()) {
         let mut current: (usize, usize) = (0, 0);
         channel = chunked_datas[current.0][current.1].to_string();
-        console::print_as_table(&chunked_datas, max_len, &channel);
+        console::print_as_table(&mut stdout, &chunked_datas, max_len, &channel);
 
         let stdin = stdin();
-        let mut _stdout = stdout().into_raw_mode().unwrap();
 
         for c in stdin.keys() {
             match c.unwrap() {
@@ -77,40 +81,68 @@ async fn main() {
                 _ => {}
             }
             channel = chunked_datas[current.0][current.1].to_string();
-            console::print_as_table(&chunked_datas, max_len, &channel);
+            console::print_as_table(&mut stdout, &chunked_datas, max_len, &channel);
         }
     }
 
-    console::print_as_table(&chunked_datas, max_len, &channel);
+    console::print_as_table(&mut stdout, &chunked_datas, max_len, &channel);
 
     if message.trim().is_empty() {
+        let mut buffer: Vec<u8> = Vec::new();
+
+        #[rustfmt::skip]
+        write!(stdout, "{}{}#{}", termion::cursor::Goto(1, 1), termion::clear::All, &channel).unwrap();
+        #[rustfmt::skip]
+        write!(stdout, "{}{}", termion::cursor::Goto(1, 2), "(send - ctrl+s / exit - ctrl+c)").unwrap();
+        write!(stdout, "{}", termion::cursor::Goto(1, 4)).unwrap();
+        stdout.flush().unwrap();
+
         let stdin = stdin();
-        let mut lines = stdin.lock().lines();
 
-        loop {
-            console::prompt("message > ").unwrap();
-            message = match lines.next().unwrap() {
-                Ok(line) => {
-                    if line.trim().is_empty() {
-                        eprintln!("Message is empty");
+        for c in stdin.keys() {
+            match c.unwrap() {
+                Key::Ctrl('c') => return,
+                Key::Ctrl('s') => {
+                    if String::from_utf8_lossy(&buffer).trim().is_empty() {
+                        #[rustfmt::skip]
+                        write!(stdout, "{}{}", termion::cursor::Goto(1, 4), termion::clear::CurrentLine).unwrap();
+                        stdout.flush().unwrap();
                         continue;
+                    } else {
+                        break;
                     }
-
-                    line
                 }
-                Err(err) => {
-                    eprintln!("{}", err);
-                    continue;
+                Key::Char('\n') => {
+                    buffer.push(b'\r');
+                    buffer.push(b'\n');
                 }
-            };
+                Key::Char(c) => {
+                    buffer.push(c as u8);
+                }
+                Key::Backspace => {
+                    if buffer.len() > 0 {
+                        buffer.remove(buffer.len() - 1);
+                        #[rustfmt::skip]
+                        write!(stdout, "{}{}", termion::cursor::Left(1), termion::clear::AfterCursor).unwrap();
+                    }
+                }
+                _ => {}
+            }
 
-            break;
+            #[rustfmt::skip]
+            write!(stdout, "{}{}", termion::cursor::Goto(1, 4), termion::clear::CurrentLine).unwrap();
+            write!(stdout, "{}", String::from_utf8_lossy(&buffer)).unwrap();
+            stdout.flush().unwrap();
         }
+
+        message = String::from_utf8(buffer).unwrap();
     }
 
+    // Switch screen from Alternate to Main
+    drop(stdout);
     match api::post_message(&config, &channel, &message).await {
         Ok(_) => {
-            println!("[Success] #{} {}", channel, message)
+            println!("[Success] #{}\n {}", channel, message)
         }
         Err(err) => {
             eprintln!("[Failed] {}", err)

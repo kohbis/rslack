@@ -1,7 +1,6 @@
-use std::io::{stdout, Result, Write};
+use std::io::Write;
 
 use termion::color;
-use termion::raw::IntoRawMode;
 use termion::terminal_size;
 
 const BAR: &str = "|";
@@ -47,16 +46,12 @@ pub fn term_size() -> (u16, u16) {
     }
 }
 
-pub fn prompt(s: &str) -> Result<()> {
-    let mut stdout = stdout().into_raw_mode().unwrap();
-
-    write!(stdout, "{}", s)?;
-    stdout.flush()
-}
-
-pub fn print_as_table(channel_names: &Vec<Vec<&str>>, max_len: usize, selected: &str) {
-    let mut stdout = stdout().into_raw_mode().unwrap();
-
+pub fn print_as_table(
+    stdout: &mut dyn Write,
+    channel_names: &Vec<Vec<&str>>,
+    max_len: usize,
+    selected: &str,
+) {
     write!(
         stdout,
         "{}{}",
@@ -101,11 +96,11 @@ pub fn print_as_table(channel_names: &Vec<Vec<&str>>, max_len: usize, selected: 
         })
         .collect();
 
-    print_head_channels(&mut stdout, rows[0].0);
+    print_head_channels(stdout, rows[0].0);
 
     for row in rows {
-        print_row(&mut stdout, &row.1.join(BAR));
-        print_row(&mut stdout, &horizontal_rule(row.0));
+        print_row(stdout, &row.1.join(BAR));
+        print_row(stdout, &horizontal_rule(row.0));
     }
 
     stdout.flush().unwrap()
