@@ -16,7 +16,7 @@
 1. Setting OAuth Token
 
     ```bash
-    $ export SLACK_TOKEN=your-token
+    $ export RSLACK_TOKEN=your-token
 
     # or
 
@@ -34,7 +34,7 @@ $ cargo run
 If you want to run on Docker, exec the following command.
 ```bash
 $ docker build -t rslack .
-$ docker run --rm -e SLACK_TOKEN=your-token -ti rslack
+$ docker run --rm -e RSLACK_TOKEN=your-token -ti rslack
 ```
 
 ## Test

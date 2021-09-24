@@ -4,7 +4,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::Path;
 
-const SLACK_TOKEN: &str = "SLACK_TOKEN";
+const RSLACK_TOKEN: &str = "RSLACK_TOKEN";
 
 #[derive(Debug, PartialEq)]
 pub struct Config {
@@ -30,7 +30,7 @@ impl Config {
 
     #[allow(clippy::single_match)]
     fn read_from_env(&mut self) -> Result<&Self> {
-        match env::var(SLACK_TOKEN) {
+        match env::var(RSLACK_TOKEN) {
             Ok(token) => self.token = token,
             Err(_) => {}
         }
@@ -53,7 +53,7 @@ impl Config {
                     let (key, val) = (entries[0].trim(), entries[1].trim().to_string());
 
                     match key {
-                        SLACK_TOKEN => self.token = val,
+                        RSLACK_TOKEN => self.token = val,
                         _ => {}
                     }
                 }
@@ -65,7 +65,7 @@ impl Config {
 
     fn validate(&mut self) -> Result<()> {
         if self.token.is_empty() {
-            return Err(anyhow!("{} not found.", SLACK_TOKEN));
+            return Err(anyhow!("{} not found.", RSLACK_TOKEN));
         }
 
         Ok(())
@@ -78,7 +78,7 @@ mod tests {
     use serial_test::serial;
 
     fn setup() {
-        env::remove_var(SLACK_TOKEN);
+        env::remove_var(RSLACK_TOKEN);
     }
 
     #[test]
@@ -104,7 +104,7 @@ mod tests {
     #[serial]
     fn initialize_with_env() {
         setup();
-        env::set_var(SLACK_TOKEN, "token-from-env-123");
+        env::set_var(RSLACK_TOKEN, "token-from-env-123");
         let actual = Config::new("no_file").unwrap();
         let expected = Config {
             token: String::from("token-from-env-123"),
@@ -117,7 +117,7 @@ mod tests {
     #[should_panic]
     fn initialize_with_empty_env() {
         setup();
-        env::set_var(SLACK_TOKEN, "");
+        env::set_var(RSLACK_TOKEN, "");
         Config::new("no_file").unwrap();
     }
 
@@ -125,7 +125,7 @@ mod tests {
     #[serial]
     fn initialize_with_env_and_file() {
         setup();
-        env::set_var(SLACK_TOKEN, "token-from-env-123");
+        env::set_var(RSLACK_TOKEN, "token-from-env-123");
         let expected = Config {
             token: String::from("token-from-file-123"),
         };
