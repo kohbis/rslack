@@ -88,12 +88,12 @@ async fn main() {
     console::print_as_table(&mut stdout, &chunked_datas, max_len, &channel);
 
     if message.trim().is_empty() {
-        let mut buffer: Vec<u8> = Vec::new();
+        let mut buffer: Vec<char> = Vec::new();
 
         #[rustfmt::skip]
         write!(stdout, "{}{}#{}", termion::cursor::Goto(1, 1), termion::clear::All, &channel).unwrap();
         #[rustfmt::skip]
-        write!(stdout, "{}{}", termion::cursor::Goto(1, 2), "(send - ctrl+s / exit - ctrl+c)").unwrap();
+        write!(stdout, "{}{}", termion::cursor::Goto(1, 2), "(post: ctrl-p / exit: ctrl-c)").unwrap();
         write!(stdout, "{}", termion::cursor::Goto(1, 4)).unwrap();
         stdout.flush().unwrap();
 
@@ -102,8 +102,9 @@ async fn main() {
         for c in stdin.keys() {
             match c.unwrap() {
                 Key::Ctrl('c') => return,
-                Key::Ctrl('s') => {
-                    if String::from_utf8_lossy(&buffer).trim().is_empty() {
+                Key::Ctrl('p') => {
+                    if message.trim().is_empty() {
+                        buffer.clear();
                         #[rustfmt::skip]
                         write!(stdout, "{}{}", termion::cursor::Goto(1, 4), termion::clear::CurrentLine).unwrap();
                         stdout.flush().unwrap();
@@ -113,11 +114,11 @@ async fn main() {
                     }
                 }
                 Key::Char('\n') => {
-                    buffer.push(b'\r');
-                    buffer.push(b'\n');
+                    buffer.push('\r');
+                    buffer.push('\n');
                 }
                 Key::Char(c) => {
-                    buffer.push(c as u8);
+                    buffer.push(c);
                 }
                 Key::Backspace => {
                     if buffer.len() > 0 {
@@ -129,13 +130,12 @@ async fn main() {
                 _ => {}
             }
 
+            message = buffer.iter().collect();
             #[rustfmt::skip]
             write!(stdout, "{}{}", termion::cursor::Goto(1, 4), termion::clear::CurrentLine).unwrap();
-            write!(stdout, "{}", String::from_utf8_lossy(&buffer)).unwrap();
+            write!(stdout, "{}", &message).unwrap();
             stdout.flush().unwrap();
         }
-
-        message = String::from_utf8(buffer).unwrap();
     }
 
     // Switch screen from Alternate to Main
