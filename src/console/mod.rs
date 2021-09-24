@@ -53,13 +53,8 @@ pub fn print_as_table(
     max_len: usize,
     selected: &str,
 ) {
-    write!(
-        stdout,
-        "{}{}",
-        termion::cursor::Goto(1, 1),
-        termion::clear::All
-    )
-    .unwrap();
+    write!(stdout, "{}", termion::cursor::Goto(1, 1)).unwrap();
+    write!(stdout, "{}", termion::clear::All).unwrap();
 
     let rows: Vec<(usize, Vec<String>)> = channel_names
         .iter()
@@ -72,7 +67,7 @@ pub fn print_as_table(
                         let (fg_color, bg_color) = if cell == selected {
                             (
                                 color::Fg(color::Black).to_string(),
-                                color::Bg(color::Blue).to_string(),
+                                color::Bg(color::White).to_string(),
                             )
                         } else {
                             (
@@ -103,6 +98,8 @@ pub fn print_as_table(
         print_row(stdout, &row.1.join(BAR));
         print_row(stdout, &horizontal_rule(row.0));
     }
+
+    write!(stdout, "Select by ← ↓ ↑ → or h j k l, and Enter.").unwrap();
 
     stdout.flush().unwrap()
 }
