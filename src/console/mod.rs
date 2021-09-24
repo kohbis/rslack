@@ -2,6 +2,7 @@ use std::io::Write;
 
 use termion::color;
 use termion::terminal_size;
+use unicode_width::UnicodeWidthStr;
 
 const BAR: &str = "|";
 const WHITESPACE: &str = " ";
@@ -87,7 +88,7 @@ pub fn print_as_table(
                             fg_color,
                             cell,
                             color::Fg(color::Reset),
-                            &WHITESPACE.repeat(max_len - cell.len()),
+                            &WHITESPACE.repeat(max_len - UnicodeWidthStr::width(cell)),
                             color::Bg(color::Reset),
                         )
                     })
