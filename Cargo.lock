@@ -865,6 +865,7 @@ dependencies = [
  "structopt",
  "termion",
  "tokio",
+ "unicode-width",
  "url",
 ]
 
