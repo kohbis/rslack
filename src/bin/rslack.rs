@@ -90,10 +90,11 @@ async fn main() {
     if message.trim().is_empty() {
         let mut buffer: Vec<char> = Vec::new();
 
-        #[rustfmt::skip]
-        write!(stdout, "{}{}#{}", termion::cursor::Goto(1, 1), termion::clear::All, &channel).unwrap();
-        #[rustfmt::skip]
-        write!(stdout, "{}{}", termion::cursor::Goto(1, 2), "(post: ctrl-p / exit: ctrl-c)").unwrap();
+        write!(stdout, "{}", termion::cursor::Goto(1, 1)).unwrap();
+        write!(stdout, "{}", termion::clear::All).unwrap();
+        write!(stdout, "#{}", &channel).unwrap();
+        write!(stdout, "{}", termion::cursor::Goto(1, 2)).unwrap();
+        write!(stdout, "{}", "(post: ctrl-p / exit: ctrl-c)").unwrap();
         write!(stdout, "{}", termion::cursor::Goto(1, 4)).unwrap();
         stdout.flush().unwrap();
 

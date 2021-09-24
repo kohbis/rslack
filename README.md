@@ -1,5 +1,7 @@
 # rslack
 
+![select](doc/image/select_channel.png)
+
 ## Setting
 
 1. [Create new app](https://api.slack.com/apps)
