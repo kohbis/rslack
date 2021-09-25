@@ -50,7 +50,7 @@ pub fn term_size() -> (u16, u16) {
 pub fn print_as_table(
     stdout: &mut dyn Write,
     channel_names: &Vec<Vec<&str>>,
-    max_len: usize,
+    max_col_size: usize,
     selected: &str,
 ) {
     write!(stdout, "{}", termion::cursor::Goto(1, 1)).unwrap();
@@ -60,7 +60,7 @@ pub fn print_as_table(
         .iter()
         .map(|names| {
             (
-                names.len() * (max_len + 2) - 1,
+                names.len() * (max_col_size + 2) - 1,
                 names
                     .into_iter()
                     .map(|&cell| {
@@ -83,7 +83,7 @@ pub fn print_as_table(
                             fg_color,
                             cell,
                             color::Fg(color::Reset),
-                            &WHITESPACE.repeat(max_len - UnicodeWidthStr::width(cell)),
+                            &WHITESPACE.repeat(max_col_size - UnicodeWidthStr::width(cell)),
                             color::Bg(color::Reset),
                         )
                     })
