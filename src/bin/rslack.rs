@@ -9,6 +9,7 @@ use rslack::api;
 use rslack::config::Config;
 use rslack::console;
 use rslack::option::Opt;
+use rslack::util;
 
 const TOKEN_FILE: &str = ".token";
 
@@ -33,9 +34,8 @@ async fn main() {
         .map(|channel| channel.name.as_str())
         .collect();
 
-    #[rustfmt::skip]
-    let max_len = channel_names.iter().max_by_key(|name| name.len()).unwrap().len() + 1;
-    let col_count = console::term_size().0 as usize / (max_len + 2);
+    let max_col_size = util::max_channel_size(&channel_names) + 1;
+    let col_count = console::term_size().0 as usize / (max_col_size + 2);
     let chunked_datas: Vec<Vec<&str>> = channel_names
         .chunks(col_count)
         .map(|chunk| chunk.to_vec())
@@ -48,7 +48,7 @@ async fn main() {
     if channel.trim().is_empty() || !channel_names.contains(&channel.as_str()) {
         let mut current: (usize, usize) = (0, 0);
         channel = chunked_datas[current.0][current.1].to_string();
-        console::print_as_table(&mut stdout, &chunked_datas, max_len, &channel);
+        console::print_as_table(&mut stdout, &chunked_datas, max_col_size, &channel);
 
         let stdin = stdin();
 
@@ -80,12 +80,13 @@ async fn main() {
                 }
                 _ => {}
             }
+
             channel = chunked_datas[current.0][current.1].to_string();
-            console::print_as_table(&mut stdout, &chunked_datas, max_len, &channel);
+            console::print_as_table(&mut stdout, &chunked_datas, max_col_size, &channel);
         }
     }
 
-    console::print_as_table(&mut stdout, &chunked_datas, max_len, &channel);
+    console::print_as_table(&mut stdout, &chunked_datas, max_col_size, &channel);
 
     if message.trim().is_empty() {
         let mut buffer: Vec<char> = Vec::new();
@@ -106,9 +107,11 @@ async fn main() {
                 Key::Ctrl('p') => {
                     if message.trim().is_empty() {
                         buffer.clear();
+
                         write!(stdout, "{}", termion::cursor::Goto(1, 4)).unwrap();
                         write!(stdout, "{}", termion::clear::CurrentLine).unwrap();
                         stdout.flush().unwrap();
+
                         continue;
                     } else {
                         break;
