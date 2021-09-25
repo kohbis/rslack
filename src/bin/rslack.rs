@@ -106,8 +106,8 @@ async fn main() {
                 Key::Ctrl('p') => {
                     if message.trim().is_empty() {
                         buffer.clear();
-                        #[rustfmt::skip]
-                        write!(stdout, "{}{}", termion::cursor::Goto(1, 4), termion::clear::CurrentLine).unwrap();
+                        write!(stdout, "{}", termion::cursor::Goto(1, 4)).unwrap();
+                        write!(stdout, "{}", termion::clear::CurrentLine).unwrap();
                         stdout.flush().unwrap();
                         continue;
                     } else {
@@ -124,16 +124,16 @@ async fn main() {
                 Key::Backspace => {
                     if buffer.len() > 0 {
                         buffer.remove(buffer.len() - 1);
-                        #[rustfmt::skip]
-                        write!(stdout, "{}{}", termion::cursor::Left(1), termion::clear::AfterCursor).unwrap();
+                        write!(stdout, "{}", termion::cursor::Left(1)).unwrap();
+                        write!(stdout, "{}", termion::clear::AfterCursor).unwrap();
                     }
                 }
                 _ => {}
             }
 
             message = buffer.iter().collect();
-            #[rustfmt::skip]
-            write!(stdout, "{}{}", termion::cursor::Goto(1, 4), termion::clear::CurrentLine).unwrap();
+            write!(stdout, "{}", termion::cursor::Goto(1, 4)).unwrap();
+            write!(stdout, "{}", termion::clear::CurrentLine).unwrap();
             write!(stdout, "{}", &message).unwrap();
             stdout.flush().unwrap();
         }
