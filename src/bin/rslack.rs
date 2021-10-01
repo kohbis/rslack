@@ -12,6 +12,7 @@ use rslack::option::Opt;
 use rslack::util;
 
 const TOKEN_FILE: &str = ".token";
+const USAGE_MESSAGES: &str = "(post: ctrl-p / exit: ctrl-c)";
 
 #[tokio::main]
 async fn main() {
@@ -95,7 +96,7 @@ async fn main() {
         write!(stdout, "{}", termion::clear::All).unwrap();
         write!(stdout, "#{}", &channel).unwrap();
         write!(stdout, "{}", termion::cursor::Goto(1, 2)).unwrap();
-        write!(stdout, "{}", "(post: ctrl-p / exit: ctrl-c)").unwrap();
+        write!(stdout, "{}", USAGE_MESSAGES).unwrap();
         write!(stdout, "{}", termion::cursor::Goto(1, 4)).unwrap();
         stdout.flush().unwrap();
 

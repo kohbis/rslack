@@ -8,6 +8,7 @@ const BAR: &str = "|";
 const WHITESPACE: &str = " ";
 const HYPHEN: &str = "-";
 const HEAD: &str = "CHANNELS";
+const USAGE_CHANNEL_MEASSAGE: &str = "Select by ← ↓ ↑ → or h j k l, and Enter.";
 
 fn print_row(stdout: &mut dyn Write, content: &str) {
     write!(stdout, "{}{}{}", BAR, content, BAR).unwrap();
@@ -99,7 +100,7 @@ pub fn print_as_table(
         print_row(stdout, &horizontal_rule(row.0));
     }
 
-    write!(stdout, "Select by ← ↓ ↑ → or h j k l, and Enter.").unwrap();
+    write!(stdout, "{}", USAGE_CHANNEL_MEASSAGE).unwrap();
 
     stdout.flush().unwrap()
 }
