@@ -92,12 +92,17 @@ async fn main() {
     if message.trim().is_empty() {
         let mut buffer: Vec<char> = Vec::new();
 
-        write!(stdout, "{}", termion::cursor::Goto(1, 1)).unwrap();
-        write!(stdout, "{}", termion::clear::All).unwrap();
-        write!(stdout, "#{}", &channel).unwrap();
-        write!(stdout, "{}", termion::cursor::Goto(1, 2)).unwrap();
-        write!(stdout, "{}", USAGE_MESSAGES).unwrap();
-        write!(stdout, "{}", termion::cursor::Goto(1, 4)).unwrap();
+        write!(
+            stdout,
+            "{}{}#{}{}{}{}",
+            termion::cursor::Goto(1, 1),
+            termion::clear::All,
+            &channel,
+            termion::cursor::Goto(1, 2),
+            USAGE_MESSAGES,
+            termion::cursor::Goto(1, 4)
+        )
+        .unwrap();
         stdout.flush().unwrap();
 
         let stdin = stdin();
@@ -109,8 +114,13 @@ async fn main() {
                     if message.trim().is_empty() {
                         buffer.clear();
 
-                        write!(stdout, "{}", termion::cursor::Goto(1, 4)).unwrap();
-                        write!(stdout, "{}", termion::clear::CurrentLine).unwrap();
+                        write!(
+                            stdout,
+                            "{}{}",
+                            termion::cursor::Goto(1, 4),
+                            termion::clear::CurrentLine
+                        )
+                        .unwrap();
                         stdout.flush().unwrap();
 
                         continue;
@@ -128,17 +138,27 @@ async fn main() {
                 Key::Backspace => {
                     if buffer.len() > 0 {
                         buffer.remove(buffer.len() - 1);
-                        write!(stdout, "{}", termion::cursor::Left(1)).unwrap();
-                        write!(stdout, "{}", termion::clear::AfterCursor).unwrap();
+                        write!(
+                            stdout,
+                            "{}{}",
+                            termion::cursor::Left(1),
+                            termion::clear::AfterCursor
+                        )
+                        .unwrap();
                     }
                 }
                 _ => {}
             }
 
             message = buffer.iter().collect();
-            write!(stdout, "{}", termion::cursor::Goto(1, 4)).unwrap();
-            write!(stdout, "{}", termion::clear::CurrentLine).unwrap();
-            write!(stdout, "{}", &message).unwrap();
+            write!(
+                stdout,
+                "{}{}{}",
+                termion::cursor::Goto(1, 4),
+                termion::clear::CurrentLine,
+                &message
+            )
+            .unwrap();
             stdout.flush().unwrap();
         }
     }
