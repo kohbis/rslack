@@ -1,6 +1,6 @@
 # rslack
 
-![select](doc/image/select_channel.png)
+![select channel](https://github.com/kohbis/rslack/blob/main/doc/image/select_channel.png?raw=true)
 
 ## Setting
 
@@ -30,17 +30,24 @@
 ## Usage
 
 ```bash
-$ cargo run
+brew install kohbis/rslack/rslack
+```
+
+If you want by local build.
+
+```bash
+cargo run
 ```
 
 If you want to run on Docker, exec the following command.
+
 ```bash
-$ docker build -t rslack .
-$ docker run --rm -e RSLACK_TOKEN=your-token -ti rslack
+docker build -t rslack .
+docker run --rm -e RSLACK_TOKEN=your-token -ti rslack
 ```
 
 ## Test
 
 ```bash
-$ cargo test
+cargo test
 ```
