@@ -10,11 +10,17 @@ const HYPHEN: &str = "-";
 const HEAD: &str = "CHANNELS";
 const USAGE_CHANNEL_MEASSAGE: &str = "Select by ← ↓ ↑ → or h j k l, and Enter.";
 
+/*
+ * Print table row with bar.
+ */
 fn print_row(stdout: &mut dyn Write, content: &str) {
     write!(stdout, "{}{}{}", BAR, content, BAR).unwrap();
     write!(stdout, "\r\n").unwrap();
 }
 
+/*
+ * Print table header.
+ */
 fn print_head_channels(stdout: &mut dyn Write, size: usize) {
     let margin = size - HEAD.len();
     let margin_left = margin / 2;
@@ -41,6 +47,9 @@ fn horizontal_rule(size: usize) -> String {
     HYPHEN.repeat(size)
 }
 
+/*
+ * Get terminal window size.
+ */
 pub fn term_size() -> (u16, u16) {
     match terminal_size() {
         Ok((width, height)) => (width, height),
@@ -48,6 +57,9 @@ pub fn term_size() -> (u16, u16) {
     }
 }
 
+/*
+ * Print channel names as table.
+ */
 pub fn print_as_table(
     stdout: &mut dyn Write,
     channel_names: &Vec<Vec<&str>>,
@@ -65,6 +77,7 @@ pub fn print_as_table(
                 names
                     .into_iter()
                     .map(|&cell| {
+                        // Highlight selected channel.
                         let (fg_color, bg_color) = if cell == selected {
                             (
                                 color::Fg(color::Black).to_string(),

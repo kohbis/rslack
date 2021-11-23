@@ -26,6 +26,7 @@ async fn main() {
         Err(err) => return eprintln!("{}", err),
     };
 
+    // Get slack channels
     let channels = match api::get_channels(&config).await {
         Ok(channels) => channels,
         Err(err) => return eprintln!("{}", err),
@@ -35,6 +36,7 @@ async fn main() {
         .map(|channel| channel.name.as_str())
         .collect();
 
+    // Build data for display table
     let max_col_size = util::max_channel_size(&channel_names) + 1;
     let col_count = console::term_size().0 as usize / (max_col_size + 2);
     let chunked_datas: Vec<Vec<&str>> = channel_names
@@ -165,6 +167,8 @@ async fn main() {
 
     // Switch screen from Alternate to Main
     drop(stdout);
+
+    // Post slack message
     match api::post_message(&config, &channel, &message).await {
         Ok(_) => {
             println!("[Success] #{}\n {}", channel, message)
