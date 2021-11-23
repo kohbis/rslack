@@ -22,10 +22,10 @@ jobs:
             artifact_prefix: linux
             target: x86_64-unknown-linux-gnu
             binary_postfix: ""
-          - os: windows-latest
-            artifact_prefix: windows
-            target: x86_64-pc-windows-msvc
-            binary_postfix: ".exe"
+          # - os: windows-latest
+          #   artifact_prefix: windows
+          #   target: x86_64-pc-windows-msvc
+          #   binary_postfix: ".exe"
 
     steps:
       - uses: actions/checkout@v2
