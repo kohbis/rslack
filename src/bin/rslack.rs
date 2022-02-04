@@ -62,11 +62,23 @@ async fn main() {
                 Key::Left | Key::Char('h') => {
                     if 0 < current.1 {
                         current.1 -= 1;
+                    } else if 0 < current.0 {
+                        current.0 -= 1;
+                        current.1 = chunked_datas[current.0].len() - 1;
+                    } else if current.0 == 0 && current.1 == 0 {
+                        current.0 = chunked_datas.len() - 1;
+                        current.1 = chunked_datas[current.0].len() - 1;
                     }
                 }
                 Key::Right | Key::Char('l') => {
                     if current.1 < chunked_datas[current.0].len() - 1 {
                         current.1 += 1;
+                    } else if current.0 < chunked_datas.len() - 1 {
+                        current.0 += 1;
+                        current.1 = 0;
+                    } else if current.0 == chunked_datas.len() - 1 {
+                        current.0 = 0;
+                        current.1 = 0;
                     }
                 }
                 Key::Up | Key::Char('k') => {
