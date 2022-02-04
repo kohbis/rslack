@@ -102,7 +102,7 @@ async fn main() {
             &channel,
             termion::cursor::Goto(1, 2),
             USAGE_MESSAGES,
-            termion::cursor::Goto(1, 4)
+            termion::cursor::Goto(1, 3)
         )
         .unwrap();
         stdout.flush().unwrap();
@@ -156,7 +156,7 @@ async fn main() {
             write!(
                 stdout,
                 "{}{}{}",
-                termion::cursor::Goto(1, 4),
+                termion::cursor::Goto(1, 3),
                 termion::clear::CurrentLine,
                 &message
             )
