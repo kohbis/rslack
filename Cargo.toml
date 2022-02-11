@@ -2,7 +2,7 @@
 name = "rslack"
 version = "0.1.4"
 authors = ["kohbis <dev.kohbis@gmail.com>"]
-edition = "2018"
+edition = "2021"
 description = "cli for posting slack message"
 readme = "README.md"
 license = "MIT"
