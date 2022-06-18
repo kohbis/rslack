@@ -39,7 +39,7 @@ async fn main() {
     // Build data for display table
     let max_col_size = util::max_channel_size(&channel_names) + 1;
     let col_count = console::term_size().0 as usize / (max_col_size + 2);
-    let chunked_datas: Vec<Vec<&str>> = channel_names
+    let chunked_data: Vec<Vec<&str>> = channel_names
         .chunks(col_count)
         .map(|chunk| chunk.to_vec())
         .collect();
@@ -50,8 +50,8 @@ async fn main() {
 
     if channel.trim().is_empty() || !channel_names.contains(&channel.as_str()) {
         let mut current: (usize, usize) = (0, 0);
-        channel = chunked_datas[current.0][current.1].to_string();
-        console::print_as_table(&mut stdout, &chunked_datas, max_col_size, &channel);
+        channel = chunked_data[current.0][current.1].to_string();
+        console::print_as_table(&mut stdout, &chunked_data, max_col_size, &channel);
 
         let stdin = stdin();
 
@@ -64,19 +64,19 @@ async fn main() {
                         current.1 -= 1;
                     } else if 0 < current.0 {
                         current.0 -= 1;
-                        current.1 = chunked_datas[current.0].len() - 1;
+                        current.1 = chunked_data[current.0].len() - 1;
                     } else if current.0 == 0 && current.1 == 0 {
-                        current.0 = chunked_datas.len() - 1;
-                        current.1 = chunked_datas[current.0].len() - 1;
+                        current.0 = chunked_data.len() - 1;
+                        current.1 = chunked_data[current.0].len() - 1;
                     }
                 }
                 Key::Right | Key::Char('l') => {
-                    if current.1 < chunked_datas[current.0].len() - 1 {
+                    if current.1 < chunked_data[current.0].len() - 1 {
                         current.1 += 1;
-                    } else if current.0 < chunked_datas.len() - 1 {
+                    } else if current.0 < chunked_data.len() - 1 {
                         current.0 += 1;
                         current.1 = 0;
-                    } else if current.0 == chunked_datas.len() - 1 {
+                    } else if current.0 == chunked_data.len() - 1 {
                         current.0 = 0;
                         current.1 = 0;
                     }
@@ -87,8 +87,8 @@ async fn main() {
                     }
                 }
                 Key::Down | Key::Char('j') => {
-                    if current.0 < chunked_datas.len() - 1
-                        && current.1 <= chunked_datas[current.0 + 1].len() - 1
+                    if current.0 < chunked_data.len() - 1
+                        && current.1 <= chunked_data[current.0 + 1].len() - 1
                     {
                         current.0 += 1;
                     }
@@ -96,12 +96,12 @@ async fn main() {
                 _ => {}
             }
 
-            channel = chunked_datas[current.0][current.1].to_string();
-            console::print_as_table(&mut stdout, &chunked_datas, max_col_size, &channel);
+            channel = chunked_data[current.0][current.1].to_string();
+            console::print_as_table(&mut stdout, &chunked_data, max_col_size, &channel);
         }
     }
 
-    console::print_as_table(&mut stdout, &chunked_datas, max_col_size, &channel);
+    console::print_as_table(&mut stdout, &chunked_data, max_col_size, &channel);
 
     if message.trim().is_empty() {
         let mut buffer: Vec<char> = Vec::new();
