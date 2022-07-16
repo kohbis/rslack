@@ -14,8 +14,7 @@ const USAGE_CHANNEL_MEASSAGE: &str = "Select by ← ↓ ↑ → or h j k l, and 
  * Print table row with bar.
  */
 fn print_row(stdout: &mut dyn Write, content: &str) {
-    write!(stdout, "{}{}{}", BAR, content, BAR).unwrap();
-    write!(stdout, "\r\n").unwrap();
+    write!(stdout, "{}{}{}{}", BAR, content, BAR, "\r\n").unwrap();
 }
 
 /*
@@ -66,8 +65,13 @@ pub fn print_as_table(
     max_col_size: usize,
     selected: &str,
 ) {
-    write!(stdout, "{}", termion::cursor::Goto(1, 1)).unwrap();
-    write!(stdout, "{}", termion::clear::All).unwrap();
+    write!(
+        stdout,
+        "{}{}",
+        termion::cursor::Goto(1, 1),
+        termion::clear::All
+    )
+    .unwrap();
 
     let rows: Vec<(usize, Vec<String>)> = channel_names
         .iter()
@@ -77,7 +81,7 @@ pub fn print_as_table(
                 names
                     .into_iter()
                     .map(|&cell| {
-                        // Highlight selected channel.
+                        // Highlight selected channel
                         let (fg_color, bg_color) = if cell == selected {
                             (
                                 color::Fg(color::Black).to_string(),
@@ -106,15 +110,13 @@ pub fn print_as_table(
         })
         .collect();
 
+    // Print table of channel names
     print_head_channels(stdout, rows[0].0);
-
     for row in rows {
         print_row(stdout, &row.1.join(BAR));
         print_row(stdout, &horizontal_rule(row.0));
     }
-
     write!(stdout, "{}", USAGE_CHANNEL_MEASSAGE).unwrap();
-
     stdout.flush().unwrap()
 }
 
