@@ -166,6 +166,7 @@ async fn main() {
                         .unwrap();
                     } else {
                         if buffer.len() > 1 {
+                            // Remove current line
                             buffer.remove(cursor_line);
                             cursor_line -= 1;
 

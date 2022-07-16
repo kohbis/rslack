@@ -7,7 +7,7 @@ use super::config::Config;
 
 #[derive(Deserialize, Debug)]
 pub struct SlackResponse {
-    pub ok: bool,
+    ok: bool,
     pub error: Option<String>,
     pub channels: Option<Vec<SlackChannel>>,
 }
