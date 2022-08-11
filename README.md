@@ -18,11 +18,11 @@
 1. Setting OAuth Token
 
     ```bash
-    $ export RSLACK_TOKEN=your-token
+    export RSLACK_TOKEN=your-token
 
     # or
 
-    $ mv .token.keep .token
+    mv .token.keep .token
     ```
 
     If both are set, use the value of `.token`
@@ -42,7 +42,7 @@ cargo run
 If you want to run on Docker, exec the following command.
 
 ```bash
-docker build -t rslack .
+docker build -t rslack -f docker/Dockerfile .
 docker run --rm -e RSLACK_TOKEN=your-token -ti rslack
 ```
 
