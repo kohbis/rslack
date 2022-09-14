@@ -6,7 +6,7 @@ on:
       - 'v*.*.*'
 
 jobs:
-  publish:
+  publish-release:
     name: Publishing for ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -66,9 +66,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  publish-cargo:
+    publish-cargo:
       name: Publishing to Cargo
       runs-on: ubuntu-latest
+      needs: publish-release
       steps:
         - uses: actions/checkout@master
         - uses: actions-rs/toolchain@v1

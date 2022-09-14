@@ -1,0 +1,41 @@
+name: CD
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - closed
+
+jobs:
+  spec:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Run fmt check
+        run: cargo fmt -- --check
+      - name: Run tests
+        run: cargo test --verbose
+
+  tagging:
+    runs-on: ubuntu-20.04
+    needs: spec
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Check head branch name
+        id: check_head_branch
+        run: |
+          if [[ ${{ github.head_ref }} =~ ^$release\/v[0-9]+\.[0-9]+\.[0-9]+(\-.*)? ]]; then
+            echo ::set-output name=match::true
+          fi
+      - name: Git Tag
+        if: steps.check_head_branch.outputs.match == 'true' && github.event.pull_request.merged == true
+        env:
+          TAG_NAME: ${{ github.head_ref }}
+        run: |
+           git tag $TAG_NAME
+           git push origin $TAG_NAME
+

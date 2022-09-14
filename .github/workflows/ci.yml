@@ -13,3 +13,4 @@ jobs:
         run: cargo fmt -- --check
       - name: Run tests
         run: cargo test --verbose
+
