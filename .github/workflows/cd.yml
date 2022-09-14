@@ -31,7 +31,7 @@ jobs:
             echo ::set-output name=match::true
           fi
       - name: Git Tag
-        if: steps.check_branch.outputs.match == true && github.event.pull_request.merged == false
+        if: steps.check_branch.outputs.match == 'true' && github.event.pull_request.merged == false
         run: |
           echo "Tag is a match"
 
