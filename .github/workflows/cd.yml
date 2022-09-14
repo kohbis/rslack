@@ -28,7 +28,7 @@ jobs:
       - name: Check head branch name
         id: check_head_branch
         run: |
-          if [[ ${{ github.head_ref }} =~ ^$release\/v[0-9]+\.[0-9]+\.[0-9]+(\-.*)? ]]; then
+          if [[ ${{ github.head_ref }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+(\-.*)?$ ]]; then
             echo ::set-output name=match::true
           fi
       - name: Git Tag
