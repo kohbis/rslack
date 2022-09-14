@@ -3,7 +3,8 @@ name: Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'dummy'
+      # - 'v*.*.*'
 
 jobs:
   publish-release:

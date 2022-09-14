@@ -34,6 +34,7 @@ jobs:
       - name: Git Tag
         if: steps.check_head_branch.outputs.match == 'true' && github.event.pull_request.merged == true
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ github.head_ref }}
         run: |
            git tag $TAG_NAME
