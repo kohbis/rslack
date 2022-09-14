@@ -28,7 +28,7 @@ jobs:
         id: check_branch
         run: |
           if [[ ${{ github.head_ref }} =~ ^release\/v[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
-              echo ::set-output name=match::true
+            echo ::set-output name=match::true
           fi
       - name: Git Tag
         if: steps.check_branch.outputs.match == 'true'
