@@ -1,0 +1,40 @@
+name: CD
+
+on:
+  pull_request:
+  # push:
+    branches:
+      - 'release/v*.*.*'
+
+jobs:
+  spec:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Run fmt check
+        run: cargo fmt -- --check
+      # - name: Run tests
+      #   run: cargo test --verbose
+
+  tagging:
+    runs-on: ubuntu-20.04
+    needs: spec
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+      - name: Extract branch name
+        id: extract_branch
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+      - name: Check branch name
+        id: check_branch
+        run: |
+          if [ ${{ steps.extract_branch.outputs.branch }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
+              echo ::set-output name=match::true
+          fi
+      - name: Git Tag
+        if: steps.check_branch.outputs.match == 'true'
+        run: |
+          echo "Tag is a match"
+
