@@ -1,10 +1,6 @@
 name: CD
 
-on:
-  pull_request:
-  # push:
-    branches:
-      - 'release/v*.*.*'
+on: pull_request
 
 jobs:
   spec:
