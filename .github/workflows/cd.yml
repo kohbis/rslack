@@ -9,10 +9,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v1
-      - name: Run fmt check
-        run: cargo fmt -- --check
-      - name: Run tests
-        run: cargo test --verbose
+      # - name: Run fmt check
+      #   run: cargo fmt -- --check
+      # - name: Run tests
+      #   run: cargo test --verbose
 
   tagging:
     runs-on: ubuntu-20.04
@@ -27,7 +27,7 @@ jobs:
             echo ::set-output name=match::true
           fi
       - name: Git Tag
-        if: steps.check_head_branch.outputs.match == 'true' && github.event.pull_request.merged == true
+        if: steps.check_head_branch.outputs.match == 'true' && github.event.pull_request.merged == false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ github.head_ref }}
