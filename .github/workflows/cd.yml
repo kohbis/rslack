@@ -2,52 +2,13 @@
 name: CD
 
 on:
-  pull_request:
-    branches:
-      - main
-    types:
-      - closed
+  push:
+    tags:
+      - 'v[0-9]+\.[0-9]+\.[0-9]+(\-.*)?'
 
 jobs:
-  spec:
-    runs-on: ubuntu-20.04
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Run fmt check
-        run: cargo fmt -- --check
-      - name: Run tests
-        run: cargo test --verbose
-
-  tagging:
-    runs-on: ubuntu-20.04
-    needs: spec
-    outputs:
-      release: ${{ steps.check_head_branch.outputs.match }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Check head branch name
-        id: check_head_branch
-        run: |
-          if [[ ${{ github.head_ref }} =~ ^v[0-9]+\.[0-9]+\.[0-9]+(\-.*)?$ ]]; then
-            echo ::set-output name=match::true
-          fi
-      - name: Git Tag
-        id: git_tag
-        if: ${{ steps.check_head_branch.outputs.match }} == 'true' && ${{ github.event.pull_request.merged }} == true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ github.head_ref }}
-        run: |
-           git tag $TAG_NAME
-           git push origin $TAG_NAME
-
-  publish-release:
+  publish:
     name: Publishing for ${{ matrix.os }}
-    needs: tagging
-    if: ${{ needs.tagging.outputs.release }} == 'true' && ${{ github.event.pull_request.merged }} == true
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -107,19 +68,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-cargo:
-    name: Publishing to Cargo
-    runs-on: ubuntu-latest
-    needs: publish-release
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          override: true
-      - run: |
-          sudo apt-get update
-          sudo apt-get install -y -qq pkg-config libssl-dev libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
-      - uses: actions-rs/cargo@v1
-        with:
-          command: publish
-          args: --token ${{ secrets.CARGO_API_KEY }} --allow-dirty
+      name: Publishing to Cargo
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@master
+        - uses: actions-rs/toolchain@v1
+          with:
+            toolchain: stable
+            override: true
+        - run: |
+            sudo apt-get update
+            sudo apt-get install -y -qq pkg-config libssl-dev libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+        - uses: actions-rs/cargo@v1
+          with:
+            command: publish
+            args: --token ${{ secrets.CARGO_API_KEY }} --allow-dirty
