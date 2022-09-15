@@ -1,3 +1,4 @@
+---
 name: CD
 
 on:
@@ -22,6 +23,9 @@ jobs:
   tagging:
     runs-on: ubuntu-20.04
     needs: spec
+    outputs:
+      release: ${{ steps.check_head_branch.outputs.match }}
+      git_tag: ${{ steps.git_tag.outputs.git_tag }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -32,11 +36,19 @@ jobs:
             echo ::set-output name=match::true
           fi
       - name: Git Tag
-        if: steps.check_head_branch.outputs.match == 'true' && github.event.pull_request.merged == true
+        id: git_tag
+        if: ${{ steps.check_head_branch.outputs.match }} == 'true' && ${{ github.event.pull_request.merged }} == true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ github.head_ref }}
         run: |
            git tag $TAG_NAME
            git push origin $TAG_NAME
+           echo ::set-output name=git_tag::$TAG_NAME
 
+  call-workflow-passing-data:
+    needs: tagging
+    if: ${{ needs.tagging.outputs.release }} == 'true' && ${{ github.event.pull_request.merged }} == true
+    uses: kohbis/rslack/.github/workflows/release.yml@main
+    with:
+      git_tag: ${{ needs.tagging.outputs.git_tag }}
