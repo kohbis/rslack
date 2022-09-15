@@ -34,7 +34,7 @@ jobs:
   echo:
     runs-on: ubuntu-latest
     needs: spec
-    if: ${{ needs:spec.outputs.release }}
+    if: ${{ needs.spec.outputs.release }}
     steps:
       - name: echo
         run: echo ${{ needs.spec.outputs.release }}
