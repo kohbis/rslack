@@ -14,7 +14,7 @@ jobs:
   spec:
     runs-on: ubuntu-latest
     outputs:
-      release: ${{ steps.check_tag.outputs.enable }}
+      release: ${{ steps.check_release.outputs.enable }}
     steps:
       # - name: checkout
       #   uses: actions/checkout@v2
