@@ -1,5 +1,5 @@
 ---
-name: cd
+name: CD
 
 on: pull_request
   # pull_request:
@@ -16,16 +16,16 @@ jobs:
     outputs:
       release: ${{ steps.check_tag.outputs.enable }}
     steps:
-      - name: checkout
-        uses: actions/checkout@v2
-      - name: run fmt check
-        run: cargo fmt -- --check
-      - name: run tests
-        run: cargo test --verbose
+      # - name: checkout
+      #   uses: actions/checkout@v2
+      # - name: run fmt check
+      #   run: cargo fmt -- --check
+      # - name: run tests
+      #   run: cargo test --verbose
       - name: Check release
         id: check_release
         run: |
-          if [[ ${{ github.head_ref }}=~ '^v[0-9]+\.[0-9]+\.[0-9]+(\-.*)?$'  ]]; then
+          if [[ ${{ github.head_ref }} =~ '^v[0-9]+\.[0-9]+\.[0-9]+(\-.*)?$'  ]]; then
             echo ::set-output name=enable::true
           else
             echo ::set-output name=enable::false
@@ -34,9 +34,16 @@ jobs:
   echo:
     runs-on: ubuntu-latest
     needs: spec
+    if: ${{ needs:spec.outputs.release }}
     steps:
       - name: echo
         run: echo ${{ needs.spec.outputs.release }}
+  echo1:
+    runs-on: ubuntu-latest
+    needs: echo
+    steps:
+      - name: echo
+        run: echo "echo1"
   # git_tag:
   #   runs-on: ubuntu-latest
   #   needs: spec
