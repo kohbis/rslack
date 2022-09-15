@@ -1,9 +1,7 @@
+---
 name: Release
 
-on:
-  push:
-    tags:
-      - 'v*.*.*'
+on: workflow_call
 
 jobs:
   publish-release:
