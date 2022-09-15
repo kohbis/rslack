@@ -6,7 +6,6 @@ on: pull_request
 jobs:
   spec:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v2
