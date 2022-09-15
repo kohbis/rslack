@@ -4,7 +4,7 @@ name: CD
 on:
   pull_request:
     branches:
-      - master
+      - main
   #   types: [closed]
   # push:
   #   tags:
