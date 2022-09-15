@@ -1,10 +1,10 @@
 ---
 name: CD
 
-on:
-  pull_request:
-    branches:
-      - main
+on: pull_request
+  # pull_request:
+  #   branches:
+  #     - main
   #   types: [closed]
   # push:
   #   tags:
@@ -12,7 +12,7 @@ on:
 
 jobs:
   spec:
-    if: github.head_ref =~ 'v[0-9]+.[0-9]+.[0-9]+.*'
+    if: github.head_ref =~ '^v[0-9]+\.[0-9]+\.[0-9]+$'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
