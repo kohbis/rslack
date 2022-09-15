@@ -2,13 +2,40 @@
 name: CD
 
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+.*'
+  pull_request:
+    branches:
+      - master
+  #   types: [closed]
+  # push:
+  #   tags:
+  #     - 'v[0-9]+.[0-9]+.[0-9]+.*'
 
 jobs:
-  publish:
+  spec:
+    if: github.head_ref =~ 'v[0-9]+.[0-9]+.[0-9]+.*'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Run fmt check
+        run: cargo fmt -- --check
+      - name: Run tests
+        run: cargo test --verbose
+
+  git_tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git Tag
+        id: git_tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git tag ${{ github.head_ref }}
+          git push origin ${{ github.head_ref }}
+
+  release:
     name: Publishing for ${{ matrix.os }}
+    needs: spec
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -68,18 +95,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-cargo:
-      name: Publishing to Cargo
-      runs-on: ubuntu-latest
-      steps:
-        - uses: actions/checkout@master
-        - uses: actions-rs/toolchain@v1
-          with:
-            toolchain: stable
-            override: true
-        - run: |
-            sudo apt-get update
-            sudo apt-get install -y -qq pkg-config libssl-dev libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
-        - uses: actions-rs/cargo@v1
-          with:
-            command: publish
-            args: --token ${{ secrets.CARGO_API_KEY }} --allow-dirty
+    name: Publishing to Cargo
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - run: |
+          sudo apt-get update
+          sudo apt-get install -y -qq pkg-config libssl-dev libxcb1-dev libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+      - uses: actions-rs/cargo@v1
+        with:
+          command: publish
+          args: --token ${{ secrets.CARGO_API_KEY }} --allow-dirty
