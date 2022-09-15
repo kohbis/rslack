@@ -1,7 +1,12 @@
 ---
 name: Release
 
-on: workflow_call
+on:
+  workflow_call:
+    inputs:
+      git_tag:
+        required: true
+        type: string
 
 jobs:
   publish-release:
