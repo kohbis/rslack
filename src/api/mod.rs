@@ -3,7 +3,7 @@ use reqwest::Client;
 use serde::Deserialize;
 use url::Url;
 
-use super::config::Config;
+use crate::config::Config;
 
 #[derive(Deserialize, Debug)]
 pub struct SlackResponse {
