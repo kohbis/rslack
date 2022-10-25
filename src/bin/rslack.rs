@@ -3,7 +3,7 @@ use std::io::{stdin, stdout, Write};
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
-use termion::screen::AlternateScreen;
+use termion::screen::IntoAlternateScreen;
 
 use rslack::api;
 use rslack::config::Config;
@@ -46,7 +46,7 @@ async fn main() {
 
     let stdout = stdout().into_raw_mode().unwrap();
     // Switch screen from Main to Alternate
-    let mut stdout = AlternateScreen::from(stdout);
+    let mut stdout = stdout.into_alternate_screen().unwrap();
 
     if channel.trim().is_empty() || !channel_names.contains(&channel.as_str()) {
         let mut current: (usize, usize) = (0, 0);
