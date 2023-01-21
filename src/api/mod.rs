@@ -21,10 +21,9 @@ pub struct SlackChannel {
  * Get slack channels.
  */
 pub async fn get_channels(config: &Config) -> Result<Vec<SlackChannel>> {
-    let params = vec![("token", &config.token)];
-    let url = Url::parse_with_params("https://slack.com/api/conversations.list", params).unwrap();
+    let url = Url::parse("https://slack.com/api/conversations.list").unwrap();
 
-    let client = Client::new().get(url);
+    let client = Client::new().get(url).bearer_auth(&config.token);
 
     let res: SlackResponse = client.send().await?.json().await?;
 
@@ -39,14 +38,13 @@ pub async fn get_channels(config: &Config) -> Result<Vec<SlackChannel>> {
  * Post slack message.
  */
 pub async fn post_message(config: &Config, channel: &str, text: &str) -> Result<SlackResponse> {
-    let body = vec![
-        ("channel", channel),
-        ("text", text),
-        ("token", &config.token),
-    ];
+    let body = vec![("channel", channel), ("text", text)];
     let url = Url::parse("https://slack.com/api/chat.postMessage").unwrap();
 
-    let client = Client::new().post(url).form(&body);
+    let client = Client::new()
+        .post(url)
+        .bearer_auth(&config.token)
+        .form(&body);
 
     let res: SlackResponse = client.send().await?.json().await?;
 
