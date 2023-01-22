@@ -5,7 +5,6 @@ use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use termion::screen::IntoAlternateScreen;
 
-// use rslack::api;
 use rslack::config::Config;
 use rslack::console;
 use rslack::option::Opt;
@@ -116,7 +115,6 @@ async fn main() {
         stdout.flush().unwrap();
 
         let stdin = stdin();
-
         for c in stdin.keys() {
             match c.unwrap() {
                 Key::Ctrl('c') => return,
