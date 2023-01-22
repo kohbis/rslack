@@ -5,11 +5,11 @@ use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use termion::screen::IntoAlternateScreen;
 
-use rslack::api;
+// use rslack::api;
 use rslack::config::Config;
 use rslack::console;
 use rslack::option::Opt;
-use rslack::util;
+use rslack::slack;
 
 const TOKEN_FILE: &str = ".token";
 const USAGE_MESSAGES: &str = "(post: ctrl-p / exit: ctrl-c)";
@@ -17,7 +17,6 @@ const USAGE_MESSAGES: &str = "(post: ctrl-p / exit: ctrl-c)";
 #[tokio::main]
 async fn main() {
     let opts = Opt::get_opts();
-
     let mut channel = opts.channel;
     let mut message = opts.message;
 
@@ -26,17 +25,19 @@ async fn main() {
         Err(err) => return eprintln!("{}", err),
     };
 
+    let slack_client = slack::SlackClient::new(&config);
+
     // Get slack channels
-    let channels = match api::get_channels(&config).await {
+    let channels = match slack_client.get_channels().await {
         Ok(channels) => channels,
         Err(err) => return eprintln!("{}", err),
     };
-    let channel_names: Vec<&str> = util::slack_channel_names(&channels);
+    let channel_names: Vec<&str> = slack::slack_channel_names(&channels);
 
     // Build data for display table
-    let max_col_size = util::max_channel_size(&channel_names) + 1;
+    let max_col_size = slack::max_channel_size(&channel_names) + 1;
     let col_count = console::term_size().0 as usize / (max_col_size + 2);
-    let chunked_data = util::chunk_slack_channel_names(col_count, &channel_names);
+    let chunked_data = slack::chunk_slack_channel_names(col_count, &channel_names);
 
     let stdout = stdout().into_raw_mode().unwrap();
     // Switch screen from Main to Alternate
@@ -194,7 +195,7 @@ async fn main() {
     drop(stdout);
 
     // Post slack message
-    match api::post_message(&config, &channel, &message).await {
+    match slack_client.post_message(&channel, &message).await {
         Ok(_) => {
             println!("[Success] #{}\n {}", channel, message)
         }
