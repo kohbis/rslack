@@ -19,23 +19,30 @@
 
     ```bash
     export RSLACK_TOKEN=your-token
-
-    # or
-
-    mv .token.keep .token
     ```
-
-    If both are set, use the value of `.token`
 
 ## Usage
 
 ```bash
+# Install
 brew install kohbis/rslack/rslack
+
+# Set token
+export RSLACK_TOKEN=your-token
+
+rslack
 ```
 
 If you want by local build.
 
 ```bash
+export RSLACK_TOKEN=your-token
+# or
+mv .token.keep .token
+echo "RSLACK_TOKEN=your-token" > .token
+
+# If both are set, use the value of `.token`
+    
 cargo run
 ```
 
