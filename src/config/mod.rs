@@ -85,7 +85,7 @@ mod tests {
     #[serial]
     fn initialize_with_valid_file() {
         setup();
-        let actual = Config::new("tests/token.test.valid").unwrap();
+        let actual = Config::new("tests/fixtures/config/token.test.valid").unwrap();
         let expected = Config {
             token: String::from("token-from-file-123"),
         };
@@ -129,7 +129,7 @@ mod tests {
         let expected = Config {
             token: String::from("token-from-file-123"),
         };
-        let actual = Config::new("tests/token.test.valid").unwrap();
+        let actual = Config::new("tests/fixtures/config/token.test.valid").unwrap();
         assert_eq!(actual, expected);
     }
 

@@ -19,13 +19,15 @@ pub struct SlackChannel {
 
 pub struct SlackClient {
     pub client: Client,
+    pub base_url: String,
     pub bearer_token: String,
 }
 
 impl SlackClient {
-    pub fn new(config: &Config) -> Self {
+    pub fn new(config: &Config, base_url: &str) -> Self {
         Self {
             client: Client::new(),
+            base_url: base_url.to_owned(),
             bearer_token: config.token.clone(),
         }
     }
@@ -34,7 +36,7 @@ impl SlackClient {
      * Get slack channels.
      */
     pub async fn get_channels(&self) -> Result<Vec<SlackChannel>> {
-        let url = Url::parse("https://slack.com/api/conversations.list").unwrap();
+        let url = Url::parse(&format!("{}{}", self.base_url, "/api/conversations.list")).unwrap();
 
         let res: SlackResponse = self
             .client
@@ -57,7 +59,7 @@ impl SlackClient {
      */
     pub async fn post_message(&self, channel: &str, text: &str) -> Result<SlackResponse> {
         let body = vec![("channel", channel), ("text", text)];
-        let url = Url::parse("https://slack.com/api/chat.postMessage").unwrap();
+        let url = Url::parse(&format!("{}{}", self.base_url, "/api/chat.postMessage")).unwrap();
 
         let client = self
             .client
@@ -102,6 +104,36 @@ pub fn max_channel_size(channel_names: &Vec<&str>) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
+
+    #[test]
+    fn it_create_slack_client() {
+        let config = Config {
+            token: "token".to_string(),
+        };
+        let slack_client = SlackClient::new(&config, "https://example.com");
+        assert_eq!(slack_client.bearer_token, config.token);
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn it_get_channels() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/api/conversations.list")
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body_from_file("tests/fixtures/slack/conversations_list/ok.json")
+            .create_async()
+            .await;
+
+        let config = Config {
+            token: "token".to_string(),
+        };
+        let slack_client = SlackClient::new(&config, &server.url());
+        let channels = slack_client.get_channels().await.unwrap();
+        assert_eq!(channels.len(), 2);
+    }
 
     #[test]
     fn it_build_slack_channel_names() {
