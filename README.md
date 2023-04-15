@@ -1,6 +1,6 @@
 # rslack
 
-![select channel](https://github.com/kohbis/rslack/blob/main/doc/image/select_channel.png?raw=true)
+![select channel](https://github.com/kohbis/rslack/blob/main/docs/image/select_channel.png?raw=true)
 
 ## Setting
 
@@ -33,6 +33,8 @@ export RSLACK_TOKEN=your-token
 rslack
 ```
 
+### Local Build
+
 If you want by local build.
 
 ```bash
@@ -49,7 +51,7 @@ cargo run
 If you want to run on Docker, exec the following command.
 
 ```bash
-docker build -t rslack -f docker/Dockerfile .
+docker build -t rslack .
 docker run --rm -e RSLACK_TOKEN=your-token -ti rslack
 ```
 
