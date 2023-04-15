@@ -10,8 +10,9 @@ use rslack::console;
 use rslack::option::Opt;
 use rslack::slack;
 
-const TOKEN_FILE: &str = ".token";
-const USAGE_MESSAGES: &str = "(post: ctrl-p / exit: ctrl-c)";
+const SLACK_URL: &'static str = "https://slack.com";
+const TOKEN_FILE: &'static str = ".token";
+const USAGE_MESSAGES: &'static str = "(post: ctrl-p / exit: ctrl-c)";
 
 #[tokio::main]
 async fn main() {
@@ -24,7 +25,7 @@ async fn main() {
         Err(err) => return eprintln!("{}", err),
     };
 
-    let slack_client = slack::SlackClient::new(&config);
+    let slack_client = slack::SlackClient::new(&config, SLACK_URL);
 
     // Get slack channels
     let channels = match slack_client.get_channels().await {
