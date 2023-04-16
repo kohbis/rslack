@@ -27,28 +27,24 @@
 # Install
 brew install kohbis/rslack/rslack
 
-# Set token
+# Configuration
+# If both are set, use the value of `.rslack
 export RSLACK_TOKEN=your-token
+# or
+echo "RSLACK_TOKEN=your-token" > ${HOME}/.rslack
 
 rslack
 ```
 
 ### Local Build
 
-If you want by local build.
-
 ```bash
-export RSLACK_TOKEN=your-token
-# or
-mv .token.keep .token
-echo "RSLACK_TOKEN=your-token" > .token
-
-# If both are set, use the value of `.token`
-    
+# Configuration
+# and
 cargo run
 ```
 
-If you want to run on Docker, exec the following command.
+If you want to run on Docker, please execute the following command.
 
 ```bash
 docker build -t rslack .

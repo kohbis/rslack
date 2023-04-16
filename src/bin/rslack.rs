@@ -11,7 +11,6 @@ use rslack::option::Opt;
 use rslack::slack;
 
 const SLACK_URL: &'static str = "https://slack.com";
-const TOKEN_FILE: &'static str = ".token";
 const USAGE_MESSAGES: &'static str = "(post: ctrl-p / exit: ctrl-c)";
 
 #[tokio::main]
@@ -20,7 +19,7 @@ async fn main() {
     let mut channel = opts.channel;
     let mut message = opts.message;
 
-    let config = match Config::new(TOKEN_FILE) {
+    let config = match Config::new(None) {
         Ok(config) => config,
         Err(err) => return eprintln!("{}", err),
     };

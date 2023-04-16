@@ -1,10 +1,12 @@
 use anyhow::{anyhow, Result};
+use dirs;
 use std::env;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
-const RSLACK_TOKEN: &str = "RSLACK_TOKEN";
+const RSLACK_TOKEN: &'static str = "RSLACK_TOKEN";
+const CONFIG_FILE: &'static str = ".rslack";
 
 #[derive(Debug, PartialEq)]
 pub struct Config {
@@ -12,15 +14,19 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn new(filename: &str) -> Result<Self> {
+    pub fn new(config_path: Option<PathBuf>) -> Result<Self> {
         let mut config = Self {
             token: String::new(),
         };
 
         config.read_from_env()?;
 
-        if Path::new(filename).exists() {
-            config.read_from_file(filename)?;
+        if let Some(path) = config_path {
+            config.read_from_file(&path).ok();
+        } else {
+            let home = dirs::home_dir().ok_or(anyhow!("Home directory not found."))?;
+            let path = home.join(CONFIG_FILE);
+            config.read_from_file(&path).ok();
         }
 
         config.validate()?;
@@ -39,8 +45,8 @@ impl Config {
     }
 
     #[allow(clippy::single_match)]
-    fn read_from_file(&mut self, filename: &str) -> Result<&Self> {
-        let file = match File::open(filename) {
+    fn read_from_file(&mut self, path: &Path) -> Result<&Self> {
+        let file = match File::open(path) {
             Ok(file) => file,
             Err(err) => return Err(anyhow!(err)),
         };
@@ -85,7 +91,9 @@ mod tests {
     #[serial]
     fn initialize_with_valid_file() {
         setup();
-        let actual = Config::new("tests/fixtures/config/token.test.valid").unwrap();
+
+        let config_path = PathBuf::from("tests/fixtures/config/config.test.valid");
+        let actual = Config::new(Some(config_path)).unwrap();
         let expected = Config {
             token: String::from("token-from-file-123"),
         };
@@ -97,7 +105,9 @@ mod tests {
     #[should_panic]
     fn initialize_with_invalid_file() {
         setup();
-        Config::new("tests/token.test.invalid").unwrap();
+
+        let config_path = PathBuf::from("tests/config.test.invalid");
+        Config::new(Some(config_path)).unwrap();
     }
 
     #[test]
@@ -105,7 +115,9 @@ mod tests {
     fn initialize_with_env() {
         setup();
         env::set_var(RSLACK_TOKEN, "token-from-env-123");
-        let actual = Config::new("no_file").unwrap();
+
+        let config_path = PathBuf::from("no_file");
+        let actual = Config::new(Some(config_path)).unwrap();
         let expected = Config {
             token: String::from("token-from-env-123"),
         };
@@ -118,7 +130,9 @@ mod tests {
     fn initialize_with_empty_env() {
         setup();
         env::set_var(RSLACK_TOKEN, "");
-        Config::new("no_file").unwrap();
+
+        let config_path = PathBuf::from("no_file");
+        Config::new(Some(config_path)).unwrap();
     }
 
     #[test]
@@ -126,10 +140,12 @@ mod tests {
     fn initialize_with_env_and_file() {
         setup();
         env::set_var(RSLACK_TOKEN, "token-from-env-123");
+
         let expected = Config {
             token: String::from("token-from-file-123"),
         };
-        let actual = Config::new("tests/fixtures/config/token.test.valid").unwrap();
+        let config_path = PathBuf::from("tests/fixtures/config/config.test.valid");
+        let actual = Config::new(Some(config_path)).unwrap();
         assert_eq!(actual, expected);
     }
 
