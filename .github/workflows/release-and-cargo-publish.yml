@@ -1,7 +1,7 @@
 ---
-name: CD
+name: Release & Cargo publish
 
-on:
+'on':
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
