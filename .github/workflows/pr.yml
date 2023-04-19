@@ -1,7 +1,7 @@
 ---
-name: CI
+name: PR
 
-on: push
+'on': pull_request
 
 jobs:
   spec:
