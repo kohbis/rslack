@@ -12,7 +12,7 @@ categories = ["command-line-utilities"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.73"
+anyhow = "1.0.74"
 dirs = "5.0"
 libc = "0.2"
 reqwest = { version = "0.11.18", features = ["json"] }
