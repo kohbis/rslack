@@ -48,7 +48,7 @@ impl Config {
     fn read_from_file(&mut self, path: &Path) -> Result<&Self> {
         let file = match File::open(path) {
             Ok(file) => file,
-            Err(err) => return Err(anyhow!(err)),
+            Err(err) => anyhow::bail!("{}: {}", path.display(), err),
         };
 
         for line in BufReader::new(file).lines() {
@@ -71,7 +71,7 @@ impl Config {
 
     fn validate(&mut self) -> Result<()> {
         if self.token.is_empty() {
-            return Err(anyhow!("{} not found.", RSLACK_TOKEN));
+            anyhow::bail!("{} not found.", RSLACK_TOKEN);
         }
 
         Ok(())
