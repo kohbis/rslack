@@ -16,7 +16,7 @@ anyhow = "1.0.75"
 dirs = "5.0"
 libc = "0.2"
 reqwest = { version = "0.11.22", features = ["json"] }
-serde = { version = "1.0.188", features = ["derive"] }
+serde = { version = "1.0.189", features = ["derive"] }
 serde_json = "1.0.107"
 structopt = "0.3.20"
 termion = "2.0.1"
