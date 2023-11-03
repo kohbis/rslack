@@ -3,8 +3,6 @@ name: CD
 
 on:
   push:
-    branches:
-      - main
 
 jobs:
   build-test:
