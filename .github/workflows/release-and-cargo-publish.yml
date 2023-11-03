@@ -60,6 +60,7 @@ jobs:
     name: GitHub release (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     needs: release-please
+    if: needs.release-please.outputs.created
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest]
