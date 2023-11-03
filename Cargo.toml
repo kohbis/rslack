@@ -1,6 +1,6 @@
 [package]
 name = "rslack"
-version = "0.3.3"
+version = "0.3.2"
 authors = ["kohbis <dev.kohbis@gmail.com>"]
 edition = "2021"
 description = "cli for posting slack message"
