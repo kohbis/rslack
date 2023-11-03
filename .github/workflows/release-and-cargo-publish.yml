@@ -1,8 +1,10 @@
 ---
-name: CD
+name: Release & Cargo publish
 
 on:
   push:
+    branches:
+      - main
 
 jobs:
   build-test:
