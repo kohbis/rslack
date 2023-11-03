@@ -910,6 +910,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "rpos"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9d8e3fd2f18dd3604529087e30b59ed424db32bf90ff4cf67a647cea763dbecc"
+dependencies = [
+ "anyhow",
+]
+
+[[package]]
 name = "rslack"
 version = "0.3.2"
 dependencies = [
@@ -918,6 +927,7 @@ dependencies = [
  "libc",
  "mockito",
  "reqwest",
+ "rpos",
  "serde",
  "serde_json",
  "serial_test",

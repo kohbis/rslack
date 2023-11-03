@@ -1,3 +1,4 @@
+use rpos::table::Table;
 use std::io::{stdin, stdout, Write};
 
 use termion::event::Key;
@@ -43,8 +44,10 @@ async fn main() {
     let mut stdout = stdout.into_alternate_screen().unwrap();
 
     if channel.trim().is_empty() || !channel_names.contains(&channel.as_str()) {
-        let mut current: (usize, usize) = (0, 0);
-        channel = chunked_data[current.0][current.1].to_string();
+        let mut cursor = Table::new(chunked_data.len(), chunked_data[0].len())
+            .unwrap()
+            .cursor;
+        channel = chunked_data[cursor.current().0][cursor.current().1].to_string();
         console::print_as_table(&mut stdout, &chunked_data, max_col_size, &channel);
 
         let stdin = stdin();
@@ -54,43 +57,46 @@ async fn main() {
                 Key::Char('q') | Key::Ctrl('c') => return,
                 Key::Char('\n') => break,
                 Key::Left | Key::Char('h') => {
-                    if 0 < current.1 {
-                        current.1 -= 1;
-                    } else if 0 < current.0 {
-                        current.0 -= 1;
-                        current.1 = chunked_data[current.0].len() - 1;
-                    } else if current.0 == 0 && current.1 == 0 {
-                        current.0 = chunked_data.len() - 1;
-                        current.1 = chunked_data[current.0].len() - 1;
+                    if 0 < cursor.current().1 {
+                        cursor.left();
+                    } else if 0 < cursor.current().0 {
+                        cursor.up();
+                        cursor
+                            .set_column(chunked_data[cursor.current().0].len() - 1)
+                            .unwrap();
+                    } else if cursor.current() == (0, 0) {
+                        cursor.set_line(chunked_data.len() - 1).unwrap();
+                        cursor
+                            .set_column(chunked_data[cursor.current().0].len() - 1)
+                            .unwrap();
                     }
                 }
                 Key::Right | Key::Char('l') => {
-                    if current.1 < chunked_data[current.0].len() - 1 {
-                        current.1 += 1;
-                    } else if current.0 < chunked_data.len() - 1 {
-                        current.0 += 1;
-                        current.1 = 0;
-                    } else if current.0 == chunked_data.len() - 1 {
-                        current.0 = 0;
-                        current.1 = 0;
+                    if cursor.current().1 < chunked_data[cursor.current().0].len() - 1 {
+                        cursor.right();
+                    } else if cursor.current().0 < chunked_data.len() - 1 {
+                        cursor.down();
+                        cursor.set_column(0).unwrap();
+                    } else if cursor.current().0 == chunked_data.len() - 1 {
+                        cursor.set(0, 0).unwrap();
                     }
                 }
                 Key::Up | Key::Char('k') => {
-                    if 0 < current.0 {
-                        current.0 -= 1;
+                    if 0 < cursor.current().0 {
+                        cursor.up();
                     }
                 }
                 Key::Down | Key::Char('j') => {
-                    if current.0 < chunked_data.len() - 1
-                        && current.1 <= chunked_data[current.0 + 1].len() - 1
+                    if cursor.current().0 < chunked_data.len() - 1
+                        && cursor.current().1 <= chunked_data[cursor.current().0 + 1].len() - 1
                     {
-                        current.0 += 1;
+                        cursor.down();
                     }
                 }
                 _ => {}
             }
 
-            channel = chunked_data[current.0][current.1].to_string();
+            channel = chunked_data[cursor.current().0][cursor.current().1].to_string();
             console::print_as_table(&mut stdout, &chunked_data, max_col_size, &channel);
         }
     }
