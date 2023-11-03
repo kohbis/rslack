@@ -11,8 +11,6 @@ jobs:
   github-release:
     name: GitHub release (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    needs: release-please
-    if: needs.release-please.outputs.created
     strategy:
       matrix:
         os: [macos-latest, ubuntu-latest]
@@ -57,5 +55,3 @@ jobs:
             target/${{ matrix.target }}/release/rslack-${{ matrix.artifact_prefix }}.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-
