@@ -20,7 +20,7 @@ rpos = "0.3.0"
 serde = { version = "1.0.190", features = ["derive"] }
 serde_json = "1.0.108"
 structopt = "0.3.20"
-termion = "2.0.1"
+termion = "2.0.3"
 tokio = { version = "1.33.0", features = ["full"] }
 unicode-width = "0.1.11"
 url = "2.4.1"
