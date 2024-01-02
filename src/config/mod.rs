@@ -5,8 +5,8 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
-const RSLACK_TOKEN: &'static str = "RSLACK_TOKEN";
-const CONFIG_FILE: &'static str = ".rslack";
+const RSLACK_TOKEN: &str = "RSLACK_TOKEN";
+const CONFIG_FILE: &str = ".rslack";
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Config {
