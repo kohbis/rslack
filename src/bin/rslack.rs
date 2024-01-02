@@ -11,8 +11,8 @@ use rslack::console;
 use rslack::option::Opt;
 use rslack::slack;
 
-const SLACK_URL: &'static str = "https://slack.com";
-const USAGE_MESSAGES: &'static str = "(post: ctrl-p / exit: ctrl-c)";
+const SLACK_URL: &str = "https://slack.com";
+const USAGE_MESSAGES: &str = "(post: ctrl-p / exit: ctrl-c)";
 
 #[tokio::main]
 async fn main() {
@@ -32,7 +32,7 @@ async fn main() {
         Ok(channels) => channels,
         Err(err) => return eprintln!("{}", err),
     };
-    let channel_names: Vec<&str> = slack::slack_channel_names(&channels);
+    let channel_names = slack::slack_channel_names(&channels);
 
     // Build data for display table
     let max_col_size = slack::max_channel_size(&channel_names) + 1;
@@ -43,7 +43,7 @@ async fn main() {
     // Switch screen from Main to Alternate
     let mut stdout = stdout.into_alternate_screen().unwrap();
 
-    if channel.trim().is_empty() || !channel_names.contains(&channel.as_str()) {
+    if channel.trim().is_empty() || !&channel_names.contains(&channel.as_str()) {
         let mut cursor = Table::new(chunked_data.len(), chunked_data[0].len())
             .unwrap()
             .cursor;
