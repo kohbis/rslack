@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 const RSLACK_TOKEN: &'static str = "RSLACK_TOKEN";
 const CONFIG_FILE: &'static str = ".rslack";
 
-#[derive(Debug, PartialEq)]
+#[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Config {
     pub token: String,
 }
