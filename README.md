@@ -36,19 +36,12 @@ echo "RSLACK_TOKEN=your-token" > ${HOME}/.rslack
 rslack
 ```
 
-### Local Build
+### Local Build & Run
 
 ```bash
 # Configuration
 # and
-cargo run
-```
-
-If you want to run on Docker, please execute the following command.
-
-```bash
-docker build -t rslack .
-docker run --rm -e RSLACK_TOKEN=your-token -ti rslack
+cargo run --release
 ```
 
 ## Test
