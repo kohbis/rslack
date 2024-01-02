@@ -1,6 +1,7 @@
 use structopt::StructOpt;
 
-#[derive(Debug, PartialEq, StructOpt)]
+#[derive(StructOpt)]
+#[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Opt {
     #[structopt(short, long, default_value = "")]
     pub channel: String,

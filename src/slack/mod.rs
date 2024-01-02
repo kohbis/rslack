@@ -5,14 +5,14 @@ use url::Url;
 
 use crate::config::Config;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 pub struct SlackResponse {
     ok: bool,
     pub error: Option<String>,
     pub channels: Option<Vec<SlackChannel>>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize)]
 pub struct SlackChannel {
     pub name: String,
 }
