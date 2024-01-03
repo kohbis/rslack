@@ -1,4 +1,5 @@
 {
+  "release-type": "rust",
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": true,
   "changelog-sections": [
@@ -17,5 +18,6 @@
       "section": "Bug Fixes",
       "hidden": false
     }
-  ]
+  ],
+  "sequential-calls": true
 }
