@@ -126,12 +126,12 @@ async fn main() {
                 Key::Ctrl('c') => return,
                 Key::Ctrl('p') => {
                     if message.trim().is_empty() {
-                        buffer.clear();
+                        buffer = vec![vec![]];
 
                         write!(
                             stdout,
                             "{}{}",
-                            termion::cursor::Goto(1, 4),
+                            termion::cursor::Goto(1, 3),
                             termion::clear::CurrentLine
                         )
                         .unwrap();
