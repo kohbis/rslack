@@ -61,7 +61,7 @@ pub fn term_size() -> (u16, u16) {
  */
 pub fn print_as_table(
     stdout: &mut dyn Write,
-    channel_names: &Vec<Vec<&str>>,
+    channel_names: &Vec<Vec<String>>,
     max_col_size: usize,
     selected: &str,
 ) {
@@ -80,7 +80,7 @@ pub fn print_as_table(
                 names.len() * (max_col_size + 2) - 1,
                 names
                     .into_iter()
-                    .map(|&cell| {
+                    .map(|cell| {
                         // Highlight selected channel
                         let (fg_color, bg_color) = if cell == selected {
                             (
@@ -101,7 +101,8 @@ pub fn print_as_table(
                             fg_color,
                             cell,
                             color::Fg(color::Reset),
-                            &WHITESPACE.repeat(max_col_size - UnicodeWidthStr::width(cell)),
+                            &WHITESPACE
+                                .repeat(max_col_size - UnicodeWidthStr::width(cell.as_str())),
                             color::Bg(color::Reset),
                         )
                     })

@@ -97,10 +97,10 @@ impl SlackChannels {
         self.channels.len()
     }
 
-    pub fn channel_names(&self) -> Vec<&str> {
+    pub fn channel_names(&self) -> Vec<String> {
         self.channels
             .iter()
-            .map(|channel| channel.name.as_str())
+            .map(|channel| channel.name.clone())
             .collect()
     }
 

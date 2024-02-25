@@ -1,4 +1,3 @@
-use rpos::table::Table;
 use std::io::{stdin, stdout, Write};
 
 use termion::event::Key;
@@ -6,6 +5,7 @@ use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use termion::screen::IntoAlternateScreen;
 
+use rpos::table::Table;
 use rslack::config::Config;
 use rslack::console;
 use rslack::option::Opt;
@@ -37,7 +37,7 @@ async fn main() {
     let channel_names = channels.channel_names();
     let max_col_size = channels.max_channel_size() + 1;
     let col_count = console::term_size().0 as usize / (max_col_size + 2);
-    let chunked_data: Vec<Vec<&str>> = channels
+    let chunked_data: Vec<Vec<String>> = channels
         .channel_names()
         .chunks(col_count)
         .map(|chunk| chunk.to_vec())
@@ -47,7 +47,7 @@ async fn main() {
     // Switch screen from Main to Alternate
     let mut stdout = stdout.into_alternate_screen().unwrap();
 
-    if channel.trim().is_empty() || !&channel_names.contains(&channel.as_str()) {
+    if channel.trim().is_empty() || !&channel_names.contains(&channel) {
         let mut cursor = Table::new(chunked_data.len(), chunked_data[0].len())
             .unwrap()
             .cursor;
