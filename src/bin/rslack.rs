@@ -7,12 +7,11 @@ use termion::raw::IntoRawMode;
 use termion::screen::IntoAlternateScreen;
 
 use rslack::config::Config;
-use rslack::console::Table;
+use rslack::console::{Editor, Table};
 use rslack::option::Opt;
 use rslack::slack;
 
 const SLACK_URL: &str = "https://slack.com";
-const USAGE_MESSAGES: &str = "(post: ctrl-p / exit: ctrl-c)";
 
 #[tokio::main]
 async fn main() {
@@ -103,22 +102,8 @@ async fn main() {
     table.draw(&mut stdout, &channel);
 
     if message.trim().is_empty() {
-        let mut buffer: Vec<String> = vec![String::new()];
-        let mut cursor_line: usize = 0;
-
-        let header_hight = 3;
-        write!(
-            stdout,
-            "{}{}#{}{}{}{}",
-            termion::cursor::Goto(1, 1),
-            termion::clear::All,
-            &channel,
-            termion::cursor::Goto(1, 2),
-            USAGE_MESSAGES,
-            termion::cursor::Goto(1, header_hight)
-        )
-        .unwrap();
-        stdout.flush().unwrap();
+        let mut editor = Editor::new();
+        editor.draw_header(&mut stdout, &channel);
 
         let stdin = stdin();
         for c in stdin.keys() {
@@ -126,17 +111,7 @@ async fn main() {
                 Key::Ctrl('c') => return,
                 Key::Ctrl('p') => {
                     if message.trim().is_empty() {
-                        buffer = vec![String::new()];
-
-                        write!(
-                            stdout,
-                            "{}{}",
-                            termion::cursor::Goto(1, 3),
-                            termion::clear::CurrentLine
-                        )
-                        .unwrap();
-                        stdout.flush().unwrap();
-
+                        editor.clear(&mut stdout);
                         continue;
                     } else {
                         break;
@@ -144,25 +119,25 @@ async fn main() {
                 }
                 Key::Char('\n') => {
                     // Add new line
-                    buffer.push(String::new());
-                    cursor_line += 1;
+                    editor.buffer.push(String::new());
+                    editor.cursor_line += 1;
                 }
                 Key::Char(c) => {
-                    buffer[cursor_line].push(c);
+                    editor.buffer[editor.cursor_line].push(c);
                 }
                 Key::Up => {
-                    if cursor_line > 0 {
-                        cursor_line -= 1;
+                    if editor.cursor_line > 0 {
+                        editor.cursor_line -= 1;
                     }
                 }
                 Key::Down => {
-                    if cursor_line < buffer.len() - 1 {
-                        cursor_line += 1;
+                    if editor.cursor_line < editor.buffer.len() - 1 {
+                        editor.cursor_line += 1;
                     }
                 }
                 Key::Backspace => {
-                    if buffer[cursor_line].len() > 0 {
-                        buffer[cursor_line].pop();
+                    if editor.buffer[editor.cursor_line].len() > 0 {
+                        editor.buffer[editor.cursor_line].pop();
                         write!(
                             stdout,
                             "{}{}",
@@ -171,35 +146,18 @@ async fn main() {
                         )
                         .unwrap();
                     } else {
-                        if buffer.len() > 1 {
+                        if editor.buffer.len() > 1 {
                             // Remove current line
-                            buffer.remove(cursor_line);
-                            cursor_line -= 1;
+                            editor.buffer.remove(editor.cursor_line);
+                            editor.cursor_line -= 1;
                         }
                     }
                 }
                 _ => {}
             }
 
-            message = buffer.join("\r\n");
-            write!(
-                stdout,
-                "{}{}{}",
-                termion::cursor::Goto(1, header_hight),
-                termion::clear::CurrentLine,
-                &message
-            )
-            .unwrap();
-            write!(
-                stdout,
-                "{}",
-                termion::cursor::Goto(
-                    buffer[cursor_line].len() as u16 + 1,
-                    cursor_line as u16 + header_hight
-                )
-            )
-            .unwrap();
-            stdout.flush().unwrap();
+            editor.draw_message(&mut stdout);
+            message = editor.message();
         }
     }
 
