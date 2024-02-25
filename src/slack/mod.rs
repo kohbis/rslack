@@ -12,6 +12,16 @@ pub struct SlackResponse {
     pub channels: Option<Vec<SlackChannel>>,
 }
 
+pub struct SlackChannels {
+    pub channels: Vec<SlackChannel>,
+}
+
+impl From<Vec<SlackChannel>> for SlackChannels {
+    fn from(channels: Vec<SlackChannel>) -> Self {
+        Self { channels }
+    }
+}
+
 #[derive(Deserialize)]
 pub struct SlackChannel {
     pub name: String,
@@ -35,7 +45,7 @@ impl SlackClient {
     /*
      * Get slack channels.
      */
-    pub async fn get_channels(&self) -> Result<Vec<SlackChannel>> {
+    pub async fn get_channels(&self) -> Result<SlackChannels> {
         let url = Url::parse(&format!("{}{}", self.base_url, "/api/conversations.list")).unwrap();
 
         let res: SlackResponse = self
@@ -48,7 +58,12 @@ impl SlackClient {
             .await?;
 
         if res.ok {
-            Ok(res.channels.unwrap())
+            match res.channels {
+                Some(channels) => Ok(SlackChannels::from(channels)),
+                None => {
+                    return Err(anyhow!("No channels found"));
+                }
+            }
         } else {
             Err(anyhow!("{}", res.error.unwrap()))
         }
@@ -77,27 +92,23 @@ impl SlackClient {
     }
 }
 
-pub fn slack_channel_names(channels: &Vec<SlackChannel>) -> Vec<&str> {
-    channels
-        .iter()
-        .map(|channel| channel.name.as_str())
-        .collect()
-}
+impl SlackChannels {
+    pub fn len(&self) -> usize {
+        self.channels.len()
+    }
 
-pub fn chunk_slack_channel_names<'a>(
-    chunk_size: usize,
-    channel_names: &Vec<&'a str>,
-) -> Vec<Vec<&'a str>> {
-    channel_names
-        .chunks(chunk_size)
-        .map(|chunk| chunk.to_vec())
-        .collect()
-}
+    pub fn channel_names(&self) -> Vec<&str> {
+        self.channels
+            .iter()
+            .map(|channel| channel.name.as_str())
+            .collect()
+    }
 
-pub fn max_channel_size(channel_names: &Vec<&str>) -> usize {
-    match channel_names.iter().max_by_key(|name| name.len()) {
-        Some(name) => name.len(),
-        _ => 80,
+    pub fn max_channel_size(&self) -> usize {
+        match self.channel_names().iter().max_by_key(|name| name.len()) {
+            Some(name) => name.len(),
+            _ => 80,
+        }
     }
 }
 
@@ -136,27 +147,39 @@ mod tests {
     }
 
     #[test]
-    fn it_build_slack_channel_names() {
+    fn it_get_slack_channnel_names() {
         let channels = vec!["apple", "grape", "orange"];
-        let slack_channels: Vec<SlackChannel> = channels
-            .iter()
-            .map(|channel| SlackChannel {
-                name: channel.to_string(),
-            })
-            .collect();
-        assert_eq!(channels, slack_channel_names(&slack_channels));
-    }
-
-    #[test]
-    fn it_chunks_slack_channel_names() {
-        let channel_names = vec!["apple", "grape", "orange", "peach"];
-        let expected = vec![vec!["apple", "grape", "orange"], vec!["peach"]];
-        assert_eq!(expected, chunk_slack_channel_names(3, &channel_names));
+        let slack_channels = SlackChannels {
+            channels: vec![
+                SlackChannel {
+                    name: "apple".to_string(),
+                },
+                SlackChannel {
+                    name: "grape".to_string(),
+                },
+                SlackChannel {
+                    name: "orange".to_string(),
+                },
+            ],
+        };
+        assert_eq!(channels, slack_channels.channel_names());
     }
 
     #[test]
     fn it_get_max_channel_size() {
-        let channels = vec!["apple", "grape", "orange"];
-        assert_eq!(6, max_channel_size(&channels),)
+        let slack_channels = SlackChannels {
+            channels: vec![
+                SlackChannel {
+                    name: "apple".to_string(),
+                },
+                SlackChannel {
+                    name: "grape".to_string(),
+                },
+                SlackChannel {
+                    name: "orange".to_string(),
+                },
+            ],
+        };
+        assert_eq!(6, slack_channels.max_channel_size());
     }
 }
