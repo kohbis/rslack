@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.4.3](https://github.com/kohbis/rslack/compare/v0.4.2...v0.4.3) (2024-02-25)
+
+
+### Bug Fixes
+
+* 🐛 actions runs-on ([2343492](https://github.com/kohbis/rslack/commit/234349271d504e03a9e9a7f0e151db7337983931))
+* 🐛 Actions settings ([cc0aac1](https://github.com/kohbis/rslack/commit/cc0aac18351bb88dce2ad4f419b3f8666859a233))
+* 🐛 Update release actions ([5560002](https://github.com/kohbis/rslack/commit/5560002f53fbb58bca0aa979d28642c6c6e2d15d))
+
 ## [0.4.2](https://github.com/kohbis/rslack/compare/v0.4.1...v0.4.2) (2024-02-25)
 
 
