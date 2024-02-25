@@ -149,6 +149,20 @@ mod tests {
     use super::*;
 
     #[test]
+    fn build_table() {
+        let name = "test".to_string();
+        let data = vec!["a".to_string(), "b".to_string(), "c".to_string()];
+        let max_col_size = 1;
+        let table = Table::new(name, data, max_col_size);
+        assert_eq!(table.name, "test".to_string());
+        assert_eq!(
+            table.data,
+            vec!["a".to_string(), "b".to_string(), "c".to_string()]
+        );
+        assert_eq!(table.max_col_size, 1);
+    }
+
+    #[test]
     fn horizontal_rule_with_size() {
         let size = 5;
         let actual = horizontal_rule(size);
