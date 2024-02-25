@@ -111,6 +111,7 @@ async fn main() {
         let mut buffer: Vec<String> = vec![String::new()];
         let mut cursor_line: usize = 0;
 
+        let header_hight = 3;
         write!(
             stdout,
             "{}{}#{}{}{}{}",
@@ -119,7 +120,7 @@ async fn main() {
             &channel,
             termion::cursor::Goto(1, 2),
             USAGE_MESSAGES,
-            termion::cursor::Goto(1, 3)
+            termion::cursor::Goto(1, header_hight)
         )
         .unwrap();
         stdout.flush().unwrap();
@@ -147,14 +148,22 @@ async fn main() {
                     }
                 }
                 Key::Char('\n') => {
-                    buffer[cursor_line].push_str("\r\n");
-
                     // Add new line
                     buffer.push(String::new());
                     cursor_line += 1;
                 }
                 Key::Char(c) => {
                     buffer[cursor_line].push(c);
+                }
+                Key::Up => {
+                    if cursor_line > 0 {
+                        cursor_line -= 1;
+                    }
+                }
+                Key::Down => {
+                    if cursor_line < buffer.len() - 1 {
+                        cursor_line += 1;
+                    }
                 }
                 Key::Backspace => {
                     if buffer[cursor_line].len() > 0 {
@@ -171,23 +180,28 @@ async fn main() {
                             // Remove current line
                             buffer.remove(cursor_line);
                             cursor_line -= 1;
-
-                            // Remove "\r\n"
-                            let line_len = &buffer[cursor_line].len() - 2;
-                            buffer[cursor_line].truncate(line_len);
                         }
                     }
                 }
                 _ => {}
             }
 
-            message = buffer.concat();
+            message = buffer.join("\r\n");
             write!(
                 stdout,
                 "{}{}{}",
-                termion::cursor::Goto(1, 3),
+                termion::cursor::Goto(1, header_hight),
                 termion::clear::CurrentLine,
                 &message
+            )
+            .unwrap();
+            write!(
+                stdout,
+                "{}",
+                termion::cursor::Goto(
+                    buffer[cursor_line].len() as u16 + 1,
+                    cursor_line as u16 + header_hight
+                )
             )
             .unwrap();
             stdout.flush().unwrap();
