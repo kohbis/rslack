@@ -108,7 +108,7 @@ async fn main() {
     console::print_as_table(&mut stdout, &chunked_data, max_col_size, &channel);
 
     if message.trim().is_empty() {
-        let mut buffer: Vec<Vec<char>> = vec![vec![]];
+        let mut buffer: Vec<String> = vec![String::new()];
         let mut cursor_line: usize = 0;
 
         write!(
@@ -130,7 +130,7 @@ async fn main() {
                 Key::Ctrl('c') => return,
                 Key::Ctrl('p') => {
                     if message.trim().is_empty() {
-                        buffer = vec![vec![]];
+                        buffer = vec![String::new()];
 
                         write!(
                             stdout,
@@ -147,10 +147,10 @@ async fn main() {
                     }
                 }
                 Key::Char('\n') => {
-                    buffer[cursor_line].extend_from_slice(&['\r', '\n']);
+                    buffer[cursor_line].push_str("\r\n");
 
                     // Add new line
-                    buffer.push(vec![]);
+                    buffer.push(String::new());
                     cursor_line += 1;
                 }
                 Key::Char(c) => {
@@ -158,8 +158,7 @@ async fn main() {
                 }
                 Key::Backspace => {
                     if buffer[cursor_line].len() > 0 {
-                        let remove_target = &buffer[cursor_line].len() - 1;
-                        buffer[cursor_line].remove(remove_target);
+                        buffer[cursor_line].pop();
                         write!(
                             stdout,
                             "{}{}",
@@ -173,7 +172,7 @@ async fn main() {
                             buffer.remove(cursor_line);
                             cursor_line -= 1;
 
-                            // Remove ['\r', '\n']
+                            // Remove "\r\n"
                             let line_len = &buffer[cursor_line].len() - 2;
                             buffer[cursor_line].truncate(line_len);
                         }
@@ -182,11 +181,7 @@ async fn main() {
                 _ => {}
             }
 
-            message = buffer
-                .iter()
-                .map(|v| v.iter().collect::<String>())
-                .collect::<Vec<_>>()
-                .join("");
+            message = buffer.concat();
             write!(
                 stdout,
                 "{}{}{}",
