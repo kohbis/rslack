@@ -32,12 +32,16 @@ async fn main() {
         Ok(channels) => channels,
         Err(err) => return eprintln!("{}", err),
     };
-    let channel_names = slack::slack_channel_names(&channels);
 
     // Build data for display table
-    let max_col_size = slack::max_channel_size(&channel_names) + 1;
+    let channel_names = channels.channel_names();
+    let max_col_size = channels.max_channel_size() + 1;
     let col_count = console::term_size().0 as usize / (max_col_size + 2);
-    let chunked_data = slack::chunk_slack_channel_names(col_count, &channel_names);
+    let chunked_data: Vec<Vec<&str>> = channels
+        .channel_names()
+        .chunks(col_count)
+        .map(|chunk| chunk.to_vec())
+        .collect();
 
     let stdout = stdout().into_raw_mode().unwrap();
     // Switch screen from Main to Alternate
