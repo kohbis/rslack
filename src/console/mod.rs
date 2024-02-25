@@ -7,7 +7,6 @@ use unicode_width::UnicodeWidthStr;
 const BAR: &str = "|";
 const WHITESPACE: &str = " ";
 const HYPHEN: &str = "-";
-const HEAD: &str = "CHANNELS";
 const USAGE_TABLE: &str = "Select by ← ↓ ↑ → or h j k l, and Enter.";
 const USAGE_EDITOR: &str = "(post: ctrl-p / exit: ctrl-c)";
 
@@ -103,7 +102,7 @@ impl Table {
             })
             .collect();
 
-        Self::print_head_channels(stdout, rows[0].0);
+        self.print_head_channels(stdout, rows[0].0);
         for row in rows {
             Self::print_row(stdout, &row.1.join(BAR));
             Self::print_row(stdout, &horizontal_rule(row.0));
@@ -122,8 +121,8 @@ impl Table {
     /*
      * Print table header.
      */
-    fn print_head_channels(stdout: &mut dyn Write, size: usize) {
-        let margin = size - HEAD.len();
+    fn print_head_channels(&self, stdout: &mut dyn Write, size: usize) {
+        let margin = size - self.name.len();
         let margin_left = margin / 2;
         let margin_right = if margin % 2 == 0 {
             margin_left
@@ -134,7 +133,7 @@ impl Table {
         let horizontal_rule = horizontal_rule(size);
         let head = [
             &WHITESPACE.repeat(margin_left),
-            HEAD,
+            self.name.as_str(),
             &WHITESPACE.repeat(margin_right),
         ]
         .concat();
@@ -198,6 +197,29 @@ impl Editor {
         stdout.flush().unwrap();
     }
 
+    pub fn insert(&mut self, c: char) {
+        self.buffer[self.cursor_line].push(c);
+    }
+
+    pub fn backspace(&mut self, stdout: &mut dyn Write) {
+        if self.buffer[self.cursor_line].len() > 0 {
+            self.buffer[self.cursor_line].pop();
+            write!(
+                stdout,
+                "{}{}",
+                termion::cursor::Left(1),
+                termion::clear::AfterCursor
+            )
+            .unwrap();
+        } else {
+            if self.buffer.len() > 1 {
+                // Remove current line
+                self.buffer.remove(self.cursor_line);
+                self.cursor_line -= 1;
+            }
+        }
+    }
+
     pub fn clear(&mut self, stdout: &mut dyn Write) {
         self.buffer = vec![String::new()];
         self.cursor_line = 0;
@@ -210,6 +232,23 @@ impl Editor {
         )
         .unwrap();
         stdout.flush().unwrap();
+    }
+
+    pub fn cursor_up(&mut self) {
+        if self.cursor_line > 0 {
+            self.cursor_line -= 1;
+        }
+    }
+
+    pub fn cursor_down(&mut self) {
+        if self.cursor_line < self.buffer.len() - 1 {
+            self.cursor_line += 1;
+        }
+    }
+
+    pub fn new_line(&mut self) {
+        self.buffer.push(String::new());
+        self.cursor_line += 1;
     }
 }
 
