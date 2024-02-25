@@ -111,7 +111,7 @@ jobs:
           tar czvf rslack-${{ matrix.artifact_prefix }}.tar.gz rslack
           shasum -a 256 rslack-${{ matrix.artifact_prefix }}.tar.gz > rslack-${{ matrix.artifact_prefix }}.sha256
       - name: Releasing assets
-        uses: ubuntu-latest
+        runs-on: ubuntu-latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
