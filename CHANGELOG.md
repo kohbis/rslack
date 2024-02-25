@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.1](https://github.com/kohbis/rslack/compare/v0.4.0...v0.4.1) (2024-02-25)
+
+
+### Features
+
+* 🎸 Up/Dwon editor cursor ([3403798](https://github.com/kohbis/rslack/commit/3403798780ca9f2ecd20a7e1b3ecee6f61a1f2be))
+
 ## [0.4.0](https://github.com/kohbis/rslack/compare/rslack-v0.3.3...rslack-v0.4.0) (2024-01-03)
 
 
