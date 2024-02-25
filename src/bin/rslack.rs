@@ -1,4 +1,4 @@
-use std::io::{stdin, stdout, Write};
+use std::io::{stdin, stdout};
 
 use rpos::table::Table as RposTable;
 use termion::event::Key;
@@ -118,40 +118,19 @@ async fn main() {
                     }
                 }
                 Key::Char('\n') => {
-                    // Add new line
-                    editor.buffer.push(String::new());
-                    editor.cursor_line += 1;
+                    editor.new_line();
                 }
                 Key::Char(c) => {
-                    editor.buffer[editor.cursor_line].push(c);
+                    editor.insert(c);
                 }
                 Key::Up => {
-                    if editor.cursor_line > 0 {
-                        editor.cursor_line -= 1;
-                    }
+                    editor.cursor_up();
                 }
                 Key::Down => {
-                    if editor.cursor_line < editor.buffer.len() - 1 {
-                        editor.cursor_line += 1;
-                    }
+                    editor.cursor_down();
                 }
                 Key::Backspace => {
-                    if editor.buffer[editor.cursor_line].len() > 0 {
-                        editor.buffer[editor.cursor_line].pop();
-                        write!(
-                            stdout,
-                            "{}{}",
-                            termion::cursor::Left(1),
-                            termion::clear::AfterCursor
-                        )
-                        .unwrap();
-                    } else {
-                        if editor.buffer.len() > 1 {
-                            // Remove current line
-                            editor.buffer.remove(editor.cursor_line);
-                            editor.cursor_line -= 1;
-                        }
-                    }
+                    editor.backspace(&mut stdout);
                 }
                 _ => {}
             }
