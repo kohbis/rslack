@@ -1,12 +1,5 @@
 # Changelog
 
-## [0.4.2](https://github.com/kohbis/rslack/compare/v0.4.1...v0.4.2) (2024-02-25)
-
-
-### Bug Fixes
-
-* 🐛 Trigger creating github release ([59d60f7](https://github.com/kohbis/rslack/commit/59d60f7c91ace16c790889e12bce82cf80602c29))
-
 ## [0.4.1](https://github.com/kohbis/rslack/compare/v0.4.0...v0.4.1) (2024-02-25)
 
 
