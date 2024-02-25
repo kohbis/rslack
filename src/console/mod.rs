@@ -8,12 +8,27 @@ const BAR: &str = "|";
 const WHITESPACE: &str = " ";
 const HYPHEN: &str = "-";
 const HEAD: &str = "CHANNELS";
-const USAGE_CHANNEL_MEASSAGE: &str = "Select by ← ↓ ↑ → or h j k l, and Enter.";
+const USAGE_TABLE: &str = "Select by ← ↓ ↑ → or h j k l, and Enter.";
+const USAGE_EDITOR: &str = "(post: ctrl-p / exit: ctrl-c)";
 
 pub struct Table {
     pub name: String,
     pub data: Vec<String>,
     pub max_col_size: usize,
+}
+
+fn horizontal_rule(size: usize) -> String {
+    HYPHEN.repeat(size)
+}
+
+/*
+ * Get terminal window size.
+ */
+pub fn term_size() -> (u16, u16) {
+    match terminal_size() {
+        Ok((width, height)) => (width, height),
+        _ => (100, 100),
+    }
 }
 
 impl Table {
@@ -93,7 +108,7 @@ impl Table {
             Self::print_row(stdout, &row.1.join(BAR));
             Self::print_row(stdout, &horizontal_rule(row.0));
         }
-        write!(stdout, "{}", USAGE_CHANNEL_MEASSAGE).unwrap();
+        write!(stdout, "{}", USAGE_TABLE).unwrap();
         stdout.flush().unwrap()
     }
 
@@ -130,17 +145,71 @@ impl Table {
     }
 }
 
-fn horizontal_rule(size: usize) -> String {
-    HYPHEN.repeat(size)
+pub struct Editor {
+    pub buffer: Vec<String>,
+    pub cursor_line: usize,
 }
 
-/*
- * Get terminal window size.
- */
-pub fn term_size() -> (u16, u16) {
-    match terminal_size() {
-        Ok((width, height)) => (width, height),
-        _ => (100, 100),
+impl Editor {
+    pub fn new() -> Editor {
+        Editor {
+            buffer: vec![String::new()],
+            cursor_line: 0,
+        }
+    }
+
+    pub fn message(&self) -> String {
+        self.buffer.join("\r\n")
+    }
+
+    pub fn draw_header(&self, stdout: &mut dyn Write, channel: &str) {
+        write!(
+            stdout,
+            "{}{}#{}{}{}{}",
+            termion::cursor::Goto(1, 1),
+            termion::clear::All,
+            &channel,
+            termion::cursor::Goto(1, 2),
+            USAGE_EDITOR,
+            termion::cursor::Goto(1, 3)
+        )
+        .unwrap();
+        stdout.flush().unwrap();
+    }
+
+    pub fn draw_message(&mut self, stdout: &mut dyn Write) {
+        write!(
+            stdout,
+            "{}{}{}",
+            termion::cursor::Goto(1, 3),
+            termion::clear::CurrentLine,
+            self.message()
+        )
+        .unwrap();
+        write!(
+            stdout,
+            "{}",
+            termion::cursor::Goto(
+                self.buffer[self.cursor_line].len() as u16 + 1,
+                self.cursor_line as u16 + 3
+            )
+        )
+        .unwrap();
+        stdout.flush().unwrap();
+    }
+
+    pub fn clear(&mut self, stdout: &mut dyn Write) {
+        self.buffer = vec![String::new()];
+        self.cursor_line = 0;
+
+        write!(
+            stdout,
+            "{}{}",
+            termion::cursor::Goto(1, 3),
+            termion::clear::CurrentLine
+        )
+        .unwrap();
+        stdout.flush().unwrap();
     }
 }
 
