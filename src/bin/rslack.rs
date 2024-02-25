@@ -198,7 +198,10 @@ async fn main() {
             write!(
                 stdout,
                 "{}",
-                termion::cursor::Goto(buffer[cursor_line].len() as u16 + 1, cursor_line as u16 + header_hight)
+                termion::cursor::Goto(
+                    buffer[cursor_line].len() as u16 + 1,
+                    cursor_line as u16 + header_hight
+                )
             )
             .unwrap();
             stdout.flush().unwrap();
