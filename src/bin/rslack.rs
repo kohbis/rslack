@@ -1,13 +1,13 @@
 use std::io::{stdin, stdout, Write};
 
+use rpos::table::Table as RposTable;
 use termion::event::Key;
 use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use termion::screen::IntoAlternateScreen;
 
-use rpos::table::Table;
 use rslack::config::Config;
-use rslack::console;
+use rslack::console::Table;
 use rslack::option::Opt;
 use rslack::slack;
 
@@ -36,23 +36,19 @@ async fn main() {
     // Build data for display table
     let channel_names = channels.channel_names();
     let max_col_size = channels.max_channel_size() + 1;
-    let col_count = console::term_size().0 as usize / (max_col_size + 2);
-    let chunked_data: Vec<Vec<String>> = channels
-        .channel_names()
-        .chunks(col_count)
-        .map(|chunk| chunk.to_vec())
-        .collect();
+    let table = Table::new("CHANNELS".to_string(), channel_names.clone(), max_col_size);
 
     let stdout = stdout().into_raw_mode().unwrap();
     // Switch screen from Main to Alternate
     let mut stdout = stdout.into_alternate_screen().unwrap();
 
     if channel.trim().is_empty() || !&channel_names.contains(&channel) {
-        let mut cursor = Table::new(chunked_data.len(), chunked_data[0].len())
+        let chunked_data = table.chunked_data();
+        let mut cursor = RposTable::new(chunked_data.len(), chunked_data[0].len())
             .unwrap()
             .cursor;
         channel = chunked_data[cursor.current().0][cursor.current().1].to_string();
-        console::print_as_table(&mut stdout, &chunked_data, max_col_size, &channel);
+        table.draw(&mut stdout, &channel);
 
         let stdin = stdin();
 
@@ -101,11 +97,10 @@ async fn main() {
             }
 
             channel = chunked_data[cursor.current().0][cursor.current().1].to_string();
-            console::print_as_table(&mut stdout, &chunked_data, max_col_size, &channel);
+            table.draw(&mut stdout, &channel);
         }
     }
-
-    console::print_as_table(&mut stdout, &chunked_data, max_col_size, &channel);
+    table.draw(&mut stdout, &channel);
 
     if message.trim().is_empty() {
         let mut buffer: Vec<String> = vec![String::new()];
