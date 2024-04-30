@@ -15,7 +15,7 @@ categories = ["command-line-utilities"]
 anyhow = "1.0.82"
 dirs = "5.0"
 libc = "0.2"
-reqwest = { version = "0.12.3", features = ["json"] }
+reqwest = { version = "0.12.4", features = ["json"] }
 rpos = "0.3.0"
 serde = { version = "1.0.198", features = ["derive"] }
 serde_json = "1.0.116"
