@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.0](https://github.com/kohbis/rslack/compare/v0.4.3...v0.5.0) (2024-09-14)
+
+
+### Miscellaneous Chores
+
+* release 0.5.0 ([1d12e6e](https://github.com/kohbis/rslack/commit/1d12e6edffb1cb9c52a506654eca6eb776b69eb7))
+
 ## [0.4.3](https://github.com/kohbis/rslack/compare/v0.4.2...v0.4.3) (2024-02-25)
 
 
