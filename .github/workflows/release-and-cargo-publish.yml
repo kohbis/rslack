@@ -24,7 +24,6 @@ jobs:
         run: >
           cargo build
           --locked
-          --verbose
 
       - name: Run fmt check
         run: >
@@ -34,7 +33,6 @@ jobs:
       - name: Run tests
         run: >
           cargo test
-          --verbose
 
   release-please:
     name: Execute release chores
@@ -66,7 +64,6 @@ jobs:
       - name: Publish
         run: >
           cargo publish
-          --verbose
           --locked
           --token ${{ secrets.CARGO_API_KEY }}
 
