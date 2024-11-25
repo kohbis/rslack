@@ -23,7 +23,7 @@ structopt = "0.3.20"
 termion = "4.0.3"
 tokio = { version = "1.41.1", features = ["full"] }
 unicode-width = "0.2.0"
-url = "2.5.3"
+url = "2.5.4"
 
 [dev-dependencies]
 mockito = "1.6.1"
