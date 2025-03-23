@@ -11,9 +11,9 @@ const USAGE_TABLE: &str = "Select by ← ↓ ↑ → or h j k l, and Enter.";
 const USAGE_EDITOR: &str = "(post: ctrl-p / exit: ctrl-c)";
 
 pub struct Table {
-    pub name: String,
-    pub data: Vec<String>,
-    pub max_col_size: usize,
+    name: String,
+    data: Vec<String>,
+    max_col_size: usize,
 }
 
 fn horizontal_rule(size: usize) -> String {
@@ -23,7 +23,7 @@ fn horizontal_rule(size: usize) -> String {
 /*
  * Get terminal window size.
  */
-pub fn term_size() -> (u16, u16) {
+fn term_size() -> (u16, u16) {
     match terminal_size() {
         Ok((width, height)) => (width, height),
         _ => (100, 100),
@@ -145,8 +145,8 @@ impl Table {
 }
 
 pub struct Editor {
-    pub buffer: Vec<String>,
-    pub cursor_line: usize,
+    buffer: Vec<String>,
+    cursor_line: usize,
 }
 
 impl Editor {

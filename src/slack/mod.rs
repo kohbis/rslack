@@ -38,7 +38,7 @@ impl SlackClient {
         Self {
             client: Client::new(),
             base_url: base_url.to_owned(),
-            bearer_token: config.token.clone(),
+            bearer_token: config.token().to_string(),
         }
     }
 
@@ -119,11 +119,9 @@ mod tests {
 
     #[test]
     fn it_create_slack_client() {
-        let config = Config {
-            token: "token".to_string(),
-        };
+        let config = Config::new(None).unwrap();
         let slack_client = SlackClient::new(&config, "https://example.com");
-        assert_eq!(slack_client.bearer_token, config.token);
+        assert_eq!(slack_client.bearer_token, config.token());
     }
 
     #[tokio::test]
@@ -138,9 +136,7 @@ mod tests {
             .create_async()
             .await;
 
-        let config = Config {
-            token: "token".to_string(),
-        };
+        let config = Config::new(None).unwrap();
         let slack_client = SlackClient::new(&config, &server.url());
         let channels = slack_client.get_channels().await.unwrap();
         assert_eq!(channels.len(), 2);
