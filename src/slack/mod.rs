@@ -118,7 +118,9 @@ mod tests {
     use serial_test::serial;
 
     #[test]
+    #[serial]
     fn it_create_slack_client() {
+        std::env::set_var("RSLACK_TOKEN", "test-token");
         let config = Config::new(None).unwrap();
         let slack_client = SlackClient::new(&config, "https://example.com");
         assert_eq!(slack_client.bearer_token, config.token());
@@ -136,6 +138,7 @@ mod tests {
             .create_async()
             .await;
 
+        std::env::set_var("RSLACK_TOKEN", "test-token");
         let config = Config::new(None).unwrap();
         let slack_client = SlackClient::new(&config, &server.url());
         let channels = slack_client.get_channels().await.unwrap();
