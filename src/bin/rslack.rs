@@ -26,19 +26,16 @@ async fn main() {
 
     let slack_client = slack::SlackClient::new(&config, SLACK_URL);
 
-    // Get slack channels
     let channels = match slack_client.get_channels().await {
         Ok(channels) => channels,
         Err(err) => return eprintln!("{}", err),
     };
 
-    // Build data for display table
     let channel_names = channels.channel_names();
     let max_col_size = channels.max_channel_size() + 1;
     let table = Table::new("CHANNELS".to_string(), channel_names.clone(), max_col_size);
 
     let stdout = stdout().into_raw_mode().unwrap();
-    // Switch screen from Main to Alternate
     let mut stdout = stdout.into_alternate_screen().unwrap();
 
     if channel.trim().is_empty() || !&channel_names.contains(&channel) {
@@ -140,10 +137,8 @@ async fn main() {
         }
     }
 
-    // Switch screen from Alternate to Main
     drop(stdout);
 
-    // Post slack message
     match slack_client.post_message(&channel, &message).await {
         Ok(_) => {
             println!("[Success] #{}\n {}", channel, message)
