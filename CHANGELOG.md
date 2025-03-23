@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/kohbis/rslack/compare/v0.5.1...v0.5.2) (2025-03-23)
+
+
+### Continuous Integration
+
+* 🎡 Update release-please configuration ([4044e34](https://github.com/kohbis/rslack/commit/4044e3417142e88875176d638909b9f73f498785))
+
 ## [0.5.1](https://github.com/kohbis/rslack/compare/v0.5.0...v0.5.1) (2025-03-23)
 
 
