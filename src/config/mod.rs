@@ -10,7 +10,7 @@ const CONFIG_FILE: &str = ".rslack";
 
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Config {
-    pub token: String,
+    token: String,
 }
 
 impl Config {
@@ -67,6 +67,10 @@ impl Config {
         }
 
         Ok(self)
+    }
+
+    pub fn token(&self) -> &str {
+        &self.token
     }
 
     fn validate(&mut self) -> Result<()> {
