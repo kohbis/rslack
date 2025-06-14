@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.5.2](https://github.com/kohbis/rslack/compare/v0.5.1...v0.5.2) (2025-05-31)
+
+
+### Documentation
+
+* update README to enhance installation and usage instructions ([7452ec9](https://github.com/kohbis/rslack/commit/7452ec96e1c6c9093718e1760ad3414786252247))
+
+
+### Miscellaneous Chores
+
+* **deps:** bump anyhow from 1.0.97 to 1.0.98 ([66b614b](https://github.com/kohbis/rslack/commit/66b614b9baa9b4fc26ea9938cc6668596c5ff7e2))
+* **deps:** bump libc from 0.2.171 to 0.2.172 ([7fd3723](https://github.com/kohbis/rslack/commit/7fd3723796b47f555263ff7d901945e2c066a838))
+* **deps:** bump openssl from 0.10.70 to 0.10.72 ([1e5551e](https://github.com/kohbis/rslack/commit/1e5551ec565993c1d63ccfd1ca1d3cabb17491ac))
+* **deps:** bump reqwest from 0.12.15 to 0.12.16 ([786bbb6](https://github.com/kohbis/rslack/commit/786bbb687856813ca9483b127380b3d9293f0963))
+* **deps:** bump reqwest from 0.12.16 to 0.12.18 ([646402e](https://github.com/kohbis/rslack/commit/646402eedd3eb4c27438430c95726f05c8c38de3))
+* **deps:** bump termion from 4.0.4 to 4.0.5 ([592b70f](https://github.com/kohbis/rslack/commit/592b70f595970c06097079aaafc52e18e32a9a82))
+* **deps:** bump tokio from 1.44.1 to 1.44.2 ([e013059](https://github.com/kohbis/rslack/commit/e013059b47cbaa5408cad25dabbb1fd3fe59ea3d))
+* **deps:** bump tokio from 1.44.2 to 1.45.0 ([9fe1877](https://github.com/kohbis/rslack/commit/9fe18778b2cab69ee529821e4e9ee5630ff70f23))
+* **deps:** bump tokio from 1.45.0 to 1.45.1 ([a0e90cb](https://github.com/kohbis/rslack/commit/a0e90cb4c8b36111b377ef3f250598953cbf7c20))
+
+
+### Continuous Integration
+
+* 🎡 Update release-please configuration ([4044e34](https://github.com/kohbis/rslack/commit/4044e3417142e88875176d638909b9f73f498785))
+
 ## [0.5.1](https://github.com/kohbis/rslack/compare/v0.5.0...v0.5.1) (2025-03-23)
 
 
