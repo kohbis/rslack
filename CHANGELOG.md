@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.5.4](https://github.com/kohbis/rslack/compare/v0.5.3...v0.5.4) (2026-01-24)
+
+
+### Code Refactoring
+
+* 💡 extract channel selection logic into ChannelSelector module ([5a17184](https://github.com/kohbis/rslack/commit/5a17184b479425eb2448dad4db4e20bfa142f06a))
+* 💡 move SLACK_URL constant to config module ([7734e37](https://github.com/kohbis/rslack/commit/7734e3700ae2492c6e529aba8fae11b1fd5887eb))
+* 💡 replace unwrap and match error handling with Result type and ? operator ([f77edbf](https://github.com/kohbis/rslack/commit/f77edbfb2df3da0c26d6621c7f0fb7f0e094b752))
+* encapsulate editor input handling and keyboard event loop into Editor::run method ([9bca6fc](https://github.com/kohbis/rslack/commit/9bca6fcd6993a94e2b6f62227443111b8143f34c))
+
 ## [0.5.3](https://github.com/kohbis/rslack/compare/v0.5.2...v0.5.3) (2026-01-24)
 
 ### Miscellaneous Chores
