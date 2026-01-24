@@ -16,8 +16,8 @@ const SLACK_URL: &str = "https://slack.com";
 #[tokio::main]
 async fn main() {
     let opts = Opt::get_opts();
-    let mut channel = opts.channel;
-    let mut message = opts.message;
+    let mut channel = opts.channel.unwrap_or_default();
+    let mut message = opts.message.unwrap_or_default();
 
     let config = match Config::new(None) {
         Ok(config) => config,
