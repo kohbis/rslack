@@ -1,13 +1,11 @@
 use std::io::{stdin, stdout};
 
 use anyhow::Result;
-use termion::event::Key;
-use termion::input::TermRead;
 use termion::raw::IntoRawMode;
 use termion::screen::IntoAlternateScreen;
 
 use rslack::config::Config;
-use rslack::console::{ChannelSelector, Editor, SelectionResult};
+use rslack::console::{ChannelSelector, Editor, EditorResult, SelectionResult};
 use rslack::option::Opt;
 use rslack::slack;
 
@@ -44,42 +42,11 @@ async fn run() -> Result<()> {
     }
     selector.draw(&mut stdout, &channel);
 
-    if message.trim().is_empty() {
+    if Editor::needs_input(&message) {
         let mut editor = Editor::new();
-        editor.draw_header(&mut stdout, &channel);
-
-        let stdin = stdin();
-        for c in stdin.keys() {
-            match c? {
-                Key::Ctrl('c') => return Ok(()),
-                Key::Ctrl('p') => {
-                    if message.trim().is_empty() {
-                        editor.clear(&mut stdout);
-                        continue;
-                    } else {
-                        break;
-                    }
-                }
-                Key::Char('\n') => {
-                    editor.new_line();
-                }
-                Key::Char(c) => {
-                    editor.insert(c);
-                }
-                Key::Up => {
-                    editor.cursor_up();
-                }
-                Key::Down => {
-                    editor.cursor_down();
-                }
-                Key::Backspace => {
-                    editor.backspace(&mut stdout);
-                }
-                _ => {}
-            }
-
-            editor.draw_message(&mut stdout);
-            message = editor.message();
+        match editor.run(stdin(), &mut stdout, &channel)? {
+            EditorResult::Submitted(msg) => message = msg,
+            EditorResult::Cancelled => return Ok(()),
         }
     }
 

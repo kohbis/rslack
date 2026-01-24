@@ -1,6 +1,18 @@
-use std::io::Write;
+use std::io::{Read, Write};
+
+use anyhow::Result;
+use termion::event::Key;
+use termion::input::TermRead;
 
 const USAGE_EDITOR: &str = "(post: ctrl-p / exit: ctrl-c)";
+
+/// Result of message editing
+pub enum EditorResult {
+    /// User submitted the message (Ctrl-P)
+    Submitted(String),
+    /// User cancelled the editor (Ctrl-C)
+    Cancelled,
+}
 
 pub struct Editor {
     buffer: Vec<String>,
@@ -17,6 +29,52 @@ impl Editor {
 
     pub fn message(&self) -> String {
         self.buffer.join("\r\n")
+    }
+
+    /// Check if message input is needed
+    pub fn needs_input(message: &str) -> bool {
+        message.trim().is_empty()
+    }
+
+    /// Run the interactive message editor
+    /// Returns EditorResult::Submitted(message) if submitted, EditorResult::Cancelled if cancelled
+    pub fn run<R: Read, W: Write>(&mut self, stdin: R, stdout: &mut W, channel: &str) -> Result<EditorResult> {
+        self.draw_header(stdout, channel);
+
+        for c in stdin.keys() {
+            match c? {
+                Key::Ctrl('c') => return Ok(EditorResult::Cancelled),
+                Key::Ctrl('p') => {
+                    let msg = self.message();
+                    if msg.trim().is_empty() {
+                        self.clear(stdout);
+                        continue;
+                    } else {
+                        return Ok(EditorResult::Submitted(msg));
+                    }
+                }
+                Key::Char('\n') => {
+                    self.new_line();
+                }
+                Key::Char(c) => {
+                    self.insert(c);
+                }
+                Key::Up => {
+                    self.cursor_up();
+                }
+                Key::Down => {
+                    self.cursor_down();
+                }
+                Key::Backspace => {
+                    self.backspace(stdout);
+                }
+                _ => {}
+            }
+
+            self.draw_message(stdout);
+        }
+
+        Ok(EditorResult::Submitted(self.message()))
     }
 
     pub fn draw_header(&self, stdout: &mut dyn Write, channel: &str) {
