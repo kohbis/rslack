@@ -46,7 +46,8 @@ impl SlackClient {
      * Get slack channels.
      */
     pub async fn get_channels(&self) -> Result<SlackChannels> {
-        let url = Url::parse(&format!("{}{}", self.base_url, "/api/conversations.list")).unwrap();
+        let url = Url::parse(&format!("{}{}", self.base_url, "/api/conversations.list"))
+            .map_err(|e| anyhow!("Invalid URL: {}", e))?;
 
         let res: SlackResponse = self
             .client
@@ -65,7 +66,10 @@ impl SlackClient {
                 }
             }
         } else {
-            Err(anyhow!("{}", res.error.unwrap()))
+            Err(anyhow!(
+                "{}",
+                res.error.unwrap_or_else(|| "Unknown error".to_string())
+            ))
         }
     }
 
@@ -74,7 +78,8 @@ impl SlackClient {
      */
     pub async fn post_message(&self, channel: &str, text: &str) -> Result<SlackResponse> {
         let body = vec![("channel", channel), ("text", text)];
-        let url = Url::parse(&format!("{}{}", self.base_url, "/api/chat.postMessage")).unwrap();
+        let url = Url::parse(&format!("{}{}", self.base_url, "/api/chat.postMessage"))
+            .map_err(|e| anyhow!("Invalid URL: {}", e))?;
 
         let client = self
             .client
@@ -87,7 +92,10 @@ impl SlackClient {
         if res.ok {
             Ok(res)
         } else {
-            Err(anyhow!("{}", res.error.unwrap()))
+            Err(anyhow!(
+                "{}",
+                res.error.unwrap_or_else(|| "Unknown error".to_string())
+            ))
         }
     }
 }
