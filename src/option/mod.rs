@@ -1,18 +1,20 @@
-use structopt::StructOpt;
+use clap::Parser;
 
-#[derive(StructOpt)]
+#[derive(Parser)]
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Opt {
-    #[structopt(short, long, default_value = "")]
-    pub channel: String,
+    /// Slack channel name or ID
+    #[arg(short, long)]
+    pub channel: Option<String>,
 
-    #[structopt(short, long, default_value = "")]
-    pub message: String,
+    /// Message to post
+    #[arg(short, long)]
+    pub message: Option<String>,
 }
 
 impl Opt {
     pub fn get_opts() -> Self {
-        Opt::from_args()
+        Opt::parse()
     }
 }
 
@@ -24,10 +26,10 @@ mod tests {
     fn argument_with_default() {
         assert_eq!(
             Opt {
-                channel: "".to_string(),
-                message: "".to_string()
+                channel: None,
+                message: None,
             },
-            Opt::get_opts(),
+            Opt::parse_from::<[&str; 0], &str>([]),
         )
     }
 }
