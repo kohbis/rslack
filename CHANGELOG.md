@@ -1,5 +1,58 @@
 # Changelog
 
+## [0.5.3](https://github.com/kohbis/rslack/compare/v0.5.2...v0.5.3) (2026-01-24)
+
+
+### Miscellaneous Chores
+
+* **deps:** bump actions/checkout from 4 to 6 ([0fb0ea4](https://github.com/kohbis/rslack/commit/0fb0ea48f6030a3d894c3ed9a4ba510a2b7ba2f7))
+* **deps:** bump anyhow from 1.0.98 to 1.0.99 ([e3a90f9](https://github.com/kohbis/rslack/commit/e3a90f91dd9b12ac2f0d1ef055a41b2144a59b3a))
+* **deps:** bump anyhow from 1.0.99 to 1.0.100 ([efdeaea](https://github.com/kohbis/rslack/commit/efdeaea9019177d7878e2f5e1fa3cb0f108f0d6e))
+* **deps:** bump libc from 0.2.172 to 0.2.173 ([3bb7e1c](https://github.com/kohbis/rslack/commit/3bb7e1c9325c1006740258093e1789baff30bdea))
+* **deps:** bump libc from 0.2.173 to 0.2.174 ([0809817](https://github.com/kohbis/rslack/commit/08098175b6224aecca2ba0b6a9246580b9829ef0))
+* **deps:** bump libc from 0.2.174 to 0.2.175 ([2b00469](https://github.com/kohbis/rslack/commit/2b0046908b8f6db25e2b149a3c305c35a00221df))
+* **deps:** bump libc from 0.2.175 to 0.2.176 ([91a9cc0](https://github.com/kohbis/rslack/commit/91a9cc071e6dfc36f1407a7b16bbf1d174864c20))
+* **deps:** bump libc from 0.2.176 to 0.2.177 ([56458db](https://github.com/kohbis/rslack/commit/56458db075468bdf43c408a2f099201e400eed61))
+* **deps:** bump libc from 0.2.177 to 0.2.178 ([7106c98](https://github.com/kohbis/rslack/commit/7106c985107bb8e7e4481d46f56bbc4dd201d6cb))
+* **deps:** bump libc from 0.2.178 to 0.2.179 ([3ded3bf](https://github.com/kohbis/rslack/commit/3ded3bfaefd5356a2991dddc81c2ad722a5f0728))
+* **deps:** bump libc from 0.2.179 to 0.2.180 ([c37eead](https://github.com/kohbis/rslack/commit/c37eead06b5e7a2e46858656fb00a14d9561a7cb))
+* **deps:** bump mockito from 1.7.0 to 1.7.1 ([0ba1c54](https://github.com/kohbis/rslack/commit/0ba1c54fbce918320d831471bb9073b2af50da83))
+* **deps:** bump reqwest from 0.12.20 to 0.12.21 ([177b76b](https://github.com/kohbis/rslack/commit/177b76b942df4d3290bac55e098aa9733a6cc7f6))
+* **deps:** bump reqwest from 0.12.21 to 0.12.22 ([b60912e](https://github.com/kohbis/rslack/commit/b60912e2115000e20fc3b76628b4edf880e32ccc))
+* **deps:** bump reqwest from 0.12.22 to 0.12.23 ([02d8b1c](https://github.com/kohbis/rslack/commit/02d8b1cd382ec7b122402c1696c50664fabbf6d2))
+* **deps:** bump reqwest from 0.12.23 to 0.12.24 ([533b3f4](https://github.com/kohbis/rslack/commit/533b3f47d462c0c81d363e8867cfbca7b79d501b))
+* **deps:** bump reqwest from 0.12.24 to 0.12.25 ([1f4fe29](https://github.com/kohbis/rslack/commit/1f4fe29fd09dd7e8d44e64458248e76a65b592da))
+* **deps:** bump reqwest from 0.12.25 to 0.12.26 ([ebc1fbe](https://github.com/kohbis/rslack/commit/ebc1fbe194eb114a5a085205c3d4e0255d55cbe6))
+* **deps:** bump reqwest from 0.12.26 to 0.12.28 ([32a5d66](https://github.com/kohbis/rslack/commit/32a5d6629fd55d8fd58b78751d609cce3bcbe374))
+* **deps:** bump serde from 1.0.219 to 1.0.223 ([9b59cd5](https://github.com/kohbis/rslack/commit/9b59cd5c1adf2d9a5b974b04cef436b4e1ae23a9))
+* **deps:** bump serde from 1.0.223 to 1.0.225 ([9cb7b5d](https://github.com/kohbis/rslack/commit/9cb7b5d2df8e0f3e7d064b1c396b42d87cbb03ed))
+* **deps:** bump serde from 1.0.225 to 1.0.226 ([760105b](https://github.com/kohbis/rslack/commit/760105b8f4ef42e390b17f9f5080e797c686894d))
+* **deps:** bump serde from 1.0.226 to 1.0.227 ([3e0e1af](https://github.com/kohbis/rslack/commit/3e0e1afb4ed501d2a947e915b05bf778d8d37ca5))
+* **deps:** bump serde from 1.0.227 to 1.0.228 ([894e68a](https://github.com/kohbis/rslack/commit/894e68ac4cc10d903b5e3cc6e909c6563a2d2b98))
+* **deps:** bump serde_json from 1.0.140 to 1.0.141 ([2ddf399](https://github.com/kohbis/rslack/commit/2ddf3992225ddf04df8f858990b748a26c097ce5))
+* **deps:** bump serde_json from 1.0.141 to 1.0.142 ([099213a](https://github.com/kohbis/rslack/commit/099213afb7ed097cd2d4219646cf75fe3fbf0a0f))
+* **deps:** bump serde_json from 1.0.142 to 1.0.143 ([03130ce](https://github.com/kohbis/rslack/commit/03130ce18da5cef38d7e2bf44e1fdc78344bd560))
+* **deps:** bump serde_json from 1.0.143 to 1.0.145 ([6e75f5d](https://github.com/kohbis/rslack/commit/6e75f5da5ebc53633a5b64ea0bae13eb79a531d7))
+* **deps:** bump serde_json from 1.0.145 to 1.0.146 ([9bc42f1](https://github.com/kohbis/rslack/commit/9bc42f15de299840e1c255977ed6430d19c49871))
+* **deps:** bump serde_json from 1.0.146 to 1.0.147 ([a1e5fa6](https://github.com/kohbis/rslack/commit/a1e5fa6c134cc297d0a84b0b2d353ebec93339ad))
+* **deps:** bump serde_json from 1.0.147 to 1.0.148 ([13026ba](https://github.com/kohbis/rslack/commit/13026baba62afefb67c2a2bf6d8cc84a5ec930b2))
+* **deps:** bump serde_json from 1.0.148 to 1.0.149 ([b0352b5](https://github.com/kohbis/rslack/commit/b0352b515db63214b4dc0c548487741d8114546b))
+* **deps:** bump serial_test from 3.2.0 to 3.3.1 ([91c79d0](https://github.com/kohbis/rslack/commit/91c79d0beaa465fa1978da1dbef92a78e30d6095))
+* **deps:** bump termion from 4.0.5 to 4.0.6 ([735b4d7](https://github.com/kohbis/rslack/commit/735b4d7bdb5e5890e0a48209632274922a45d7bb))
+* **deps:** bump tokio from 1.45.1 to 1.48.0 ([6d3a766](https://github.com/kohbis/rslack/commit/6d3a766fc7f1d5f2dbcab472e44ef332a00acaf3))
+* **deps:** bump tokio from 1.48.0 to 1.49.0 ([4d6b4e5](https://github.com/kohbis/rslack/commit/4d6b4e5ecfe442440d1731099c9382fc50763b3b))
+* **deps:** bump unicode-width from 0.2.1 to 0.2.2 ([988a3a0](https://github.com/kohbis/rslack/commit/988a3a002a0348d29b3aa7259f50849827bd53bb))
+* **deps:** bump url from 2.5.4 to 2.5.6 ([7ffcf59](https://github.com/kohbis/rslack/commit/7ffcf596174ec1d4a6313be251af73e357f3c010))
+* **deps:** bump url from 2.5.6 to 2.5.7 ([c917278](https://github.com/kohbis/rslack/commit/c91727873006acf20e489c46fc40ed933876e165))
+* **deps:** bump url from 2.5.7 to 2.5.8 ([03ba03f](https://github.com/kohbis/rslack/commit/03ba03ffb641ddfbc14ed166acb97a37fac34c16))
+
+
+### Code Refactoring
+
+* 💡 improve error handling in slack client to replace unwrap calls with proper error messages ([f8b95ae](https://github.com/kohbis/rslack/commit/f8b95ae113de81f5ffddc31bb990d15988a8842a))
+* 💡 refactor: modularize console module by extracting editor and table into separate files ([2d7912a](https://github.com/kohbis/rslack/commit/2d7912a7dfb4263169aaf2684a773de54184caba))
+* 💡 Replace structopt with clap for command-line argument parsing ([f1c15f7](https://github.com/kohbis/rslack/commit/f1c15f7826f1afe5eb0e840480f80b403d69acef))
+
 ## [0.5.2](https://github.com/kohbis/rslack/compare/v0.5.1...v0.5.2) (2025-05-31)
 
 
