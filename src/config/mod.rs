@@ -8,6 +8,9 @@ use std::path::{Path, PathBuf};
 const RSLACK_TOKEN: &str = "RSLACK_TOKEN";
 const CONFIG_FILE: &str = ".rslack";
 
+/// Default Slack API base URL
+pub const SLACK_URL: &str = "https://slack.com";
+
 #[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Config {
     token: String,

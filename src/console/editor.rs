@@ -38,7 +38,12 @@ impl Editor {
 
     /// Run the interactive message editor
     /// Returns EditorResult::Submitted(message) if submitted, EditorResult::Cancelled if cancelled
-    pub fn run<R: Read, W: Write>(&mut self, stdin: R, stdout: &mut W, channel: &str) -> Result<EditorResult> {
+    pub fn run<R: Read, W: Write>(
+        &mut self,
+        stdin: R,
+        stdout: &mut W,
+        channel: &str,
+    ) -> Result<EditorResult> {
         self.draw_header(stdout, channel);
 
         for c in stdin.keys() {

@@ -4,12 +4,10 @@ use anyhow::Result;
 use termion::raw::IntoRawMode;
 use termion::screen::IntoAlternateScreen;
 
-use rslack::config::Config;
+use rslack::config::{Config, SLACK_URL};
 use rslack::console::{ChannelSelector, Editor, EditorResult, SelectionResult};
 use rslack::option::Opt;
 use rslack::slack;
-
-const SLACK_URL: &str = "https://slack.com";
 
 #[tokio::main]
 async fn main() {
