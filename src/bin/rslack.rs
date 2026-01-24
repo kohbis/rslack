@@ -1,5 +1,6 @@
 use std::io::{stdin, stdout};
 
+use anyhow::Result;
 use rpos::table::Table as RposTable;
 use termion::event::Key;
 use termion::input::TermRead;
@@ -15,28 +16,26 @@ const SLACK_URL: &str = "https://slack.com";
 
 #[tokio::main]
 async fn main() {
+    if let Err(err) = run().await {
+        eprintln!("{}", err);
+    }
+}
+
+async fn run() -> Result<()> {
     let opts = Opt::get_opts();
     let mut channel = opts.channel.unwrap_or_default();
     let mut message = opts.message.unwrap_or_default();
 
-    let config = match Config::new(None) {
-        Ok(config) => config,
-        Err(err) => return eprintln!("{}", err),
-    };
-
+    let config = Config::new(None)?;
     let slack_client = slack::SlackClient::new(&config, SLACK_URL);
-
-    let channels = match slack_client.get_channels().await {
-        Ok(channels) => channels,
-        Err(err) => return eprintln!("{}", err),
-    };
+    let channels = slack_client.get_channels().await?;
 
     let channel_names = channels.channel_names();
     let max_col_size = channels.max_channel_size() + 1;
     let table = Table::new("CHANNELS".to_string(), channel_names.clone(), max_col_size);
 
-    let stdout = stdout().into_raw_mode().unwrap();
-    let mut stdout = stdout.into_alternate_screen().unwrap();
+    let stdout = stdout().into_raw_mode()?;
+    let mut stdout = stdout.into_alternate_screen()?;
 
     if channel.trim().is_empty() || !&channel_names.contains(&channel) {
         let chunked_data = table.chunked_data();
@@ -49,8 +48,8 @@ async fn main() {
         let stdin = stdin();
 
         for c in stdin.keys() {
-            match c.unwrap() {
-                Key::Char('q') | Key::Ctrl('c') => return,
+            match c? {
+                Key::Char('q') | Key::Ctrl('c') => return Ok(()),
                 Key::Char('\n') => break,
                 Key::Left | Key::Char('h') => {
                     if 0 < cursor.current().1 {
@@ -104,8 +103,8 @@ async fn main() {
 
         let stdin = stdin();
         for c in stdin.keys() {
-            match c.unwrap() {
-                Key::Ctrl('c') => return,
+            match c? {
+                Key::Ctrl('c') => return Ok(()),
                 Key::Ctrl('p') => {
                     if message.trim().is_empty() {
                         editor.clear(&mut stdout);
@@ -139,12 +138,8 @@ async fn main() {
 
     drop(stdout);
 
-    match slack_client.post_message(&channel, &message).await {
-        Ok(_) => {
-            println!("[Success] #{}\n {}", channel, message)
-        }
-        Err(err) => {
-            eprintln!("[Failed] {}", err)
-        }
-    }
+    slack_client.post_message(&channel, &message).await?;
+    println!("[Success] #{}\n {}", channel, message);
+
+    Ok(())
 }
