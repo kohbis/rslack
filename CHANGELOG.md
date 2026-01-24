@@ -2,7 +2,6 @@
 
 ## [0.5.3](https://github.com/kohbis/rslack/compare/v0.5.2...v0.5.3) (2026-01-24)
 
-
 ### Miscellaneous Chores
 
 * **deps:** bump actions/checkout from 4 to 6 ([0fb0ea4](https://github.com/kohbis/rslack/commit/0fb0ea48f6030a3d894c3ed9a4ba510a2b7ba2f7))
