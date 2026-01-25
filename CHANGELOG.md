@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.5.5](https://github.com/kohbis/rslack/compare/v0.5.4...v0.5.5) (2026-01-25)
+
+
+### Features
+
+* 🎸 Add read mode for Slack channels to fetch and display message history ([1612c2a](https://github.com/kohbis/rslack/commit/1612c2aa6f2490010f425229d2ee8423584b9ac5))
+
+
+### Documentation
+
+* ✏️ Add documentation guide for AI agents working on the rslack project ([76615bb](https://github.com/kohbis/rslack/commit/76615bb54bae6f576affea1b5672807016a8f2d4))
+* ✏️ Update README with read mode feature documentation and usage examples ([c18e5a4](https://github.com/kohbis/rslack/commit/c18e5a472eff9a360234e5155c25f9b91311f752))
+
+
+### Miscellaneous Chores
+
+* 🤖 Add clap command metadata attributes to Opt struct ([649e188](https://github.com/kohbis/rslack/commit/649e188a352ee957707629974cbb1abb671cc834))
+
 ## [0.5.4](https://github.com/kohbis/rslack/compare/v0.5.3...v0.5.4) (2026-01-24)
 
 
