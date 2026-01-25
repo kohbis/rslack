@@ -278,7 +278,10 @@ mod tests {
     async fn it_get_messages() {
         let mut server = mockito::Server::new_async().await;
         server
-            .mock("GET", mockito::Matcher::Regex(r"/api/conversations\.history.*".to_string()))
+            .mock(
+                "GET",
+                mockito::Matcher::Regex(r"/api/conversations\.history.*".to_string()),
+            )
             .with_status(200)
             .with_header("content-type", "application/json")
             .with_body_from_file("tests/fixtures/slack/conversations_history/ok.json")
@@ -290,6 +293,9 @@ mod tests {
         let slack_client = SlackClient::new(&config, &server.url());
         let messages = slack_client.get_messages("C0123456789", 10).await.unwrap();
         assert_eq!(messages.messages.len(), 3);
-        assert_eq!(messages.messages[0].text, "Hello, this is the latest message!");
+        assert_eq!(
+            messages.messages[0].text,
+            "Hello, this is the latest message!"
+        );
     }
 }
