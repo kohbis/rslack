@@ -51,9 +51,7 @@ async fn run() -> Result<()> {
     if read_mode {
         drop(stdout);
 
-        let messages = slack_client
-            .get_messages(&channel_info.id, limit)
-            .await?;
+        let messages = slack_client.get_messages(&channel_info.id, limit).await?;
 
         print_messages(&channel, &messages.messages);
         return Ok(());
