@@ -10,6 +10,7 @@
 
 - Interactive channel selection with vim-like navigation (h,j,k,l or arrow keys)
 - Multi-line message editor with cursor movement
+- **Read messages from channels** (latest N messages, default: 10)
 - Command-line options for direct channel and message specification
 - Simple configuration via environment variables or config file
 
@@ -42,6 +43,7 @@ cargo build --release
 1. Navigate to **OAuth & Permissions** in your app settings
 2. Under **Scopes**, add the following **User Token Scopes**:
    - `channels:read` - To list available channels
+   - `channels:history` - To read messages from channels
    - `chat:write` - To post messages to channels
 3. Click **Install App to Workspace**
 4. Copy the **OAuth Access Token** from the **OAuth Tokens & Redirect URLs** section
@@ -105,11 +107,19 @@ rslack -c general
 
 # Post a specific message to a specific channel
 rslack -c general -m "Hello, world!"
+
+# Read messages from a channel (default: 10 messages)
+rslack -r -c general
+
+# Read a specific number of messages
+rslack -r -c general -l 20
 ```
 
 Options:
-- `-c, --channel <CHANNEL>`: Specify the channel to post to
+- `-c, --channel <CHANNEL>`: Specify the channel
 - `-m, --message <MESSAGE>`: Specify the message to post
+- `-r, --read`: Read messages from channel instead of posting
+- `-l, --limit <LIMIT>`: Number of messages to fetch (default: 10)
 
 ## Development
 
