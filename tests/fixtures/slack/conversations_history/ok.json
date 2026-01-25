@@ -1,0 +1,28 @@
+{
+    "ok": true,
+    "messages": [
+        {
+            "type": "message",
+            "user": "U0123456789",
+            "text": "Hello, this is the latest message!",
+            "ts": "1609459800.000100"
+        },
+        {
+            "type": "message",
+            "user": "U0987654321",
+            "text": "How are you doing?",
+            "ts": "1609459700.000090"
+        },
+        {
+            "type": "message",
+            "user": "U0123456789",
+            "text": "This is a multi-line message.\nIt has two lines.",
+            "ts": "1609459600.000080"
+        }
+    ],
+    "has_more": false,
+    "pin_count": 0,
+    "response_metadata": {
+        "next_cursor": ""
+    }
+}
