@@ -10,6 +10,7 @@ pub struct SlackResponse {
     ok: bool,
     pub error: Option<String>,
     pub channels: Option<Vec<SlackChannel>>,
+    pub messages: Option<Vec<SlackMessage>>,
 }
 
 pub struct SlackChannels {
@@ -22,9 +23,27 @@ impl From<Vec<SlackChannel>> for SlackChannels {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 pub struct SlackChannel {
+    pub id: String,
     pub name: String,
+}
+
+#[derive(Clone, Deserialize)]
+pub struct SlackMessage {
+    pub text: String,
+    pub user: Option<String>,
+    pub ts: String,
+}
+
+pub struct SlackMessages {
+    pub messages: Vec<SlackMessage>,
+}
+
+impl From<Vec<SlackMessage>> for SlackMessages {
+    fn from(messages: Vec<SlackMessage>) -> Self {
+        Self { messages }
+    }
 }
 
 pub struct SlackClient {
@@ -98,6 +117,38 @@ impl SlackClient {
             ))
         }
     }
+
+    /*
+     * Get channel messages (conversations.history).
+     */
+    pub async fn get_messages(&self, channel_id: &str, limit: usize) -> Result<SlackMessages> {
+        let url = Url::parse(&format!(
+            "{}{}?channel={}&limit={}",
+            self.base_url, "/api/conversations.history", channel_id, limit
+        ))
+        .map_err(|e| anyhow!("Invalid URL: {}", e))?;
+
+        let res: SlackResponse = self
+            .client
+            .get(url)
+            .bearer_auth(&self.bearer_token)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        if res.ok {
+            match res.messages {
+                Some(messages) => Ok(SlackMessages::from(messages)),
+                None => Err(anyhow!("No messages found")),
+            }
+        } else {
+            Err(anyhow!(
+                "{}",
+                res.error.unwrap_or_else(|| "Unknown error".to_string())
+            ))
+        }
+    }
 }
 
 impl SlackChannels {
@@ -117,6 +168,10 @@ impl SlackChannels {
             Some(name) => name.len(),
             _ => 80,
         }
+    }
+
+    pub fn find_by_name(&self, name: &str) -> Option<&SlackChannel> {
+        self.channels.iter().find(|c| c.name == name)
     }
 }
 
@@ -159,12 +214,15 @@ mod tests {
         let slack_channels = SlackChannels {
             channels: vec![
                 SlackChannel {
+                    id: "ID001".to_string(),
                     name: "apple".to_string(),
                 },
                 SlackChannel {
+                    id: "ID002".to_string(),
                     name: "grape".to_string(),
                 },
                 SlackChannel {
+                    id: "ID003".to_string(),
                     name: "orange".to_string(),
                 },
             ],
@@ -177,16 +235,61 @@ mod tests {
         let slack_channels = SlackChannels {
             channels: vec![
                 SlackChannel {
+                    id: "ID001".to_string(),
                     name: "apple".to_string(),
                 },
                 SlackChannel {
+                    id: "ID002".to_string(),
                     name: "grape".to_string(),
                 },
                 SlackChannel {
+                    id: "ID003".to_string(),
                     name: "orange".to_string(),
                 },
             ],
         };
         assert_eq!(6, slack_channels.max_channel_size());
+    }
+
+    #[test]
+    fn it_find_by_name() {
+        let slack_channels = SlackChannels {
+            channels: vec![
+                SlackChannel {
+                    id: "ID001".to_string(),
+                    name: "apple".to_string(),
+                },
+                SlackChannel {
+                    id: "ID002".to_string(),
+                    name: "grape".to_string(),
+                },
+            ],
+        };
+        let found = slack_channels.find_by_name("apple");
+        assert!(found.is_some());
+        assert_eq!(found.unwrap().id, "ID001");
+
+        let not_found = slack_channels.find_by_name("banana");
+        assert!(not_found.is_none());
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn it_get_messages() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", mockito::Matcher::Regex(r"/api/conversations\.history.*".to_string()))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body_from_file("tests/fixtures/slack/conversations_history/ok.json")
+            .create_async()
+            .await;
+
+        std::env::set_var("RSLACK_TOKEN", "test-token");
+        let config = Config::new(None).unwrap();
+        let slack_client = SlackClient::new(&config, &server.url());
+        let messages = slack_client.get_messages("C0123456789", 10).await.unwrap();
+        assert_eq!(messages.messages.len(), 3);
+        assert_eq!(messages.messages[0].text, "Hello, this is the latest message!");
     }
 }

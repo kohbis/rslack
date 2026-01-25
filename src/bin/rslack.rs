@@ -1,12 +1,12 @@
 use std::io::{stdin, stdout};
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use termion::raw::IntoRawMode;
 use termion::screen::IntoAlternateScreen;
 
 use rslack::config::{Config, SLACK_URL};
-use rslack::console::{ChannelSelector, Editor, EditorResult, SelectionResult};
-use rslack::option::Opt;
+use rslack::console::{print_messages, ChannelSelector, Editor, EditorResult, SelectionResult};
+use rslack::option::{Opt, DEFAULT_MESSAGE_LIMIT};
 use rslack::slack;
 
 #[tokio::main]
@@ -20,6 +20,8 @@ async fn run() -> Result<()> {
     let opts = Opt::get_opts();
     let mut channel = opts.channel.unwrap_or_default();
     let mut message = opts.message.unwrap_or_default();
+    let read_mode = opts.read;
+    let limit = opts.limit.unwrap_or(DEFAULT_MESSAGE_LIMIT);
 
     let config = Config::new(None)?;
     let slack_client = slack::SlackClient::new(&config, SLACK_URL);
@@ -40,6 +42,24 @@ async fn run() -> Result<()> {
     }
     selector.draw(&mut stdout, &channel);
 
+    // Get channel ID for API calls that require it
+    let channel_info = channels
+        .find_by_name(&channel)
+        .ok_or_else(|| anyhow!("Channel '{}' not found", channel))?;
+
+    // Read mode: fetch and display messages
+    if read_mode {
+        drop(stdout);
+
+        let messages = slack_client
+            .get_messages(&channel_info.id, limit)
+            .await?;
+
+        print_messages(&channel, &messages.messages);
+        return Ok(());
+    }
+
+    // Write mode: compose and post message
     if Editor::needs_input(&message) {
         let mut editor = Editor::new();
         match editor.run(stdin(), &mut stdout, &channel)? {
