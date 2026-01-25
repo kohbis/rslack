@@ -2,6 +2,7 @@ use clap::Parser;
 
 #[derive(Parser)]
 #[cfg_attr(test, derive(Debug, PartialEq))]
+#[command(author, version, about, long_about = None)]
 pub struct Opt {
     /// Slack channel name or ID
     #[arg(short, long)]
