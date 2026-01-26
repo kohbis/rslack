@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.5.6](https://github.com/kohbis/rslack/compare/v0.5.5...v0.5.6) (2026-01-26)
+
+
+### Bug Fixes
+
+* 🐛 Update reqwest to support form-encoded requests ([e9a58a2](https://github.com/kohbis/rslack/commit/e9a58a2885a8fc7269f6cba6246f1f6a8bea94ad))
+
+
+### Documentation
+
+* ✏️ Add project guidelines reference to CLAUDE.md for AI agents ([3b795fa](https://github.com/kohbis/rslack/commit/3b795fa33f47fe54def92cf8c0854fb03ea19e3d))
+
+
+### Miscellaneous Chores
+
+* **deps:** bump reqwest from 0.12.28 to 0.13.1 ([fb79e9b](https://github.com/kohbis/rslack/commit/fb79e9b02b9f49c73928499b13e595ce77a1dd52))
+* **deps:** bump rpos from 0.3.0 to 0.3.2 ([3b2aaf0](https://github.com/kohbis/rslack/commit/3b2aaf0861e5a19d6548d550955a17dc34160be8))
+
 ## [0.5.5](https://github.com/kohbis/rslack/compare/v0.5.4...v0.5.5) (2026-01-25)
 
 
