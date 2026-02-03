@@ -27,5 +27,5 @@ unicode-width = "0.2.2"
 url = "2.5.8"
 
 [dev-dependencies]
-mockito = "1.7.1"
+mockito = "1.7.2"
 serial_test = "3.3.1"
