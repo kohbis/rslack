@@ -1237,9 +1237,9 @@ dependencies = [
 
 [[package]]
 name = "rpos"
-version = "0.3.2"
+version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "aa3810cc1ada39b782f05d45e3f0d105fbd4d75074bd3955509e4b0b7b34c0b3"
+checksum = "1e0032370e15c9b9e2447bdcddd72a7b21b694e1b23146a23a24e643da7d5697"
 dependencies = [
  "anyhow",
 ]
