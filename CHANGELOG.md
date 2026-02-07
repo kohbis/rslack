@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.5.6](https://github.com/kohbis/rslack/compare/v0.5.5...v0.5.6) (2026-02-07)
+
+
+### Bug Fixes
+
+* 🐛 Update reqwest to support form-encoded requests ([e9a58a2](https://github.com/kohbis/rslack/commit/e9a58a2885a8fc7269f6cba6246f1f6a8bea94ad))
+
+
+### Documentation
+
+* ✏️ Add project guidelines reference to CLAUDE.md for AI agents ([3b795fa](https://github.com/kohbis/rslack/commit/3b795fa33f47fe54def92cf8c0854fb03ea19e3d))
+
+
+### Miscellaneous Chores
+
+* **deps:** bump anyhow from 1.0.100 to 1.0.101 ([74698bb](https://github.com/kohbis/rslack/commit/74698bb79c4c879d64bea357cf1ddbe586ede651))
+* **deps:** bump anyhow from 1.0.100 to 1.0.101 ([b36e58b](https://github.com/kohbis/rslack/commit/b36e58b596db95724348f2b05709bd2feb703d47))
+* **deps:** bump bytes from 1.9.0 to 1.11.1 ([36f65c2](https://github.com/kohbis/rslack/commit/36f65c22fdb6b9f46874263caca2758131af3e79))
+* **deps:** bump bytes from 1.9.0 to 1.11.1 ([4c3cd23](https://github.com/kohbis/rslack/commit/4c3cd23f78e34b576390c9a062d8551b1d363c51))
+* **deps:** bump clap from 4.5.54 to 4.5.55 ([ae6417d](https://github.com/kohbis/rslack/commit/ae6417d3da7f677b744c56c980ee25077b517c42))
+* **deps:** bump clap from 4.5.54 to 4.5.55 ([0eca7a7](https://github.com/kohbis/rslack/commit/0eca7a7e3fb4bab598412cf91c9dd309b8156828))
+* **deps:** bump clap from 4.5.55 to 4.5.56 ([a107dae](https://github.com/kohbis/rslack/commit/a107dae64d81cd4bb6e366529ea3ab1babd4a1c7))
+* **deps:** bump clap from 4.5.55 to 4.5.56 ([e0370fe](https://github.com/kohbis/rslack/commit/e0370fe079721ac706492cd25f129f80f8ed20a6))
+* **deps:** bump clap from 4.5.56 to 4.5.57 ([64592d8](https://github.com/kohbis/rslack/commit/64592d8457053cbddc0a2c281b3344ee488a1fa9))
+* **deps:** bump clap from 4.5.56 to 4.5.57 ([06294b1](https://github.com/kohbis/rslack/commit/06294b1911e1915074655240191bab1724f17540))
+* **deps:** bump mockito from 1.7.1 to 1.7.2 ([6ba230f](https://github.com/kohbis/rslack/commit/6ba230f506ef8f5411a35ba5ea16b548a01de6be))
+* **deps:** bump mockito from 1.7.1 to 1.7.2 ([3c89359](https://github.com/kohbis/rslack/commit/3c89359f041a2ccdf2d2cec428975df23757fc56))
+* **deps:** bump reqwest from 0.12.28 to 0.13.1 ([fb79e9b](https://github.com/kohbis/rslack/commit/fb79e9b02b9f49c73928499b13e595ce77a1dd52))
+* **deps:** bump rpos from 0.3.0 to 0.3.2 ([871d5ea](https://github.com/kohbis/rslack/commit/871d5ea6c3ff5bc565b050637f9118e29bfd97e1))
+* **deps:** bump rpos from 0.3.0 to 0.3.2 ([3b2aaf0](https://github.com/kohbis/rslack/commit/3b2aaf0861e5a19d6548d550955a17dc34160be8))
+
+
+### Continuous Integration
+
+* 🎡 Update release-please-action to use googleapis organization ([46410af](https://github.com/kohbis/rslack/commit/46410af56085be5791bbf992c0cb913f8140d51a))
+
 ## [0.5.5](https://github.com/kohbis/rslack/compare/v0.5.4...v0.5.5) (2026-01-25)
 
 
