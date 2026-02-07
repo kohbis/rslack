@@ -1,8 +1,8 @@
 use std::io::{Read, Write};
 
 use anyhow::Result;
-use rpos::WrapMode;
 use rpos::table::Table as RposTable;
+use rpos::WrapMode;
 use termion::event::Key;
 use termion::input::TermRead;
 
@@ -41,12 +41,16 @@ impl ChannelSelector {
     pub fn run<R: Read, W: Write>(&self, stdin: R, stdout: &mut W) -> Result<SelectionResult> {
         let chunked_data = self.table.chunked_data();
 
-        let widths = self.table.chunked_data()
+        let widths = self
+            .table
+            .chunked_data()
             .iter()
             .map(|row| row.len())
             .collect::<Vec<usize>>();
         let num_rows = widths.len();
-        let mut cursor = RposTable::new_jagged(widths.clone())?.wrap_mode(WrapMode::Wrap).cursor;
+        let mut cursor = RposTable::new_jagged(widths.clone())?
+            .wrap_mode(WrapMode::Wrap)
+            .cursor;
 
         let mut selected = chunked_data[cursor.current().0][cursor.current().1].to_string();
         self.table.draw(stdout, &selected);
