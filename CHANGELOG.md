@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.7](https://github.com/kohbis/rslack/compare/v0.5.6...v0.5.7) (2026-02-07)
+
+
+### Features
+
+* 🎸 Handle jagged table cursor navigation by skipping rows that don't contain the current column ([9ed75e5](https://github.com/kohbis/rslack/commit/9ed75e57015789e4930a373bc42cf67187b8909a))
+
+
+### Code Refactoring
+
+* 💡 Upgrade rpos to 0.4.0 with support for jagged table navigation ([e094429](https://github.com/kohbis/rslack/commit/e09442964b40eede262869b117cc841d74bc1e16))
+
 ## [0.5.6](https://github.com/kohbis/rslack/compare/v0.5.5...v0.5.6) (2026-02-07)
 
 
