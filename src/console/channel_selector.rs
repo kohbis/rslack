@@ -41,12 +41,12 @@ impl ChannelSelector {
     pub fn run<R: Read, W: Write>(&self, stdin: R, stdout: &mut W) -> Result<SelectionResult> {
         let chunked_data = self.table.chunked_data();
 
-        // Create a cursor for navigating the table
         let widths = self.table.chunked_data()
             .iter()
             .map(|row| row.len())
             .collect::<Vec<usize>>();
-        let mut cursor = RposTable::new_jagged(widths)?.wrap_mode(WrapMode::Wrap).cursor;
+        let num_rows = widths.len();
+        let mut cursor = RposTable::new_jagged(widths.clone())?.wrap_mode(WrapMode::Wrap).cursor;
 
         let mut selected = chunked_data[cursor.current().0][cursor.current().1].to_string();
         self.table.draw(stdout, &selected);
@@ -62,10 +62,28 @@ impl ChannelSelector {
                     cursor.right();
                 }
                 Key::Up | Key::Char('k') => {
-                    cursor.up();
+                    let (row, col) = cursor.current();
+                    // NOTE: Skip rows that don't have the current column
+                    //       rpos's cursor.up() does not handle jagged tables well in this case
+                    for i in 1..num_rows {
+                        let target = (row + num_rows - i) % num_rows;
+                        if widths[target] > col {
+                            let _ = cursor.set(target, col);
+                            break;
+                        }
+                    }
                 }
                 Key::Down | Key::Char('j') => {
-                    cursor.down();
+                    let (row, col) = cursor.current();
+                    // NOTE: Skip rows that don't have the current column
+                    //       rpos's cursor.down() does not handle jagged tables well in this case
+                    for i in 1..num_rows {
+                        let target = (row + i) % num_rows;
+                        if widths[target] > col {
+                            let _ = cursor.set(target, col);
+                            break;
+                        }
+                    }
                 }
                 _ => {}
             }
