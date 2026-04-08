@@ -10,12 +10,12 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    reviewers:
+    assignees:
       - "kohbis"
 
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
-    reviewers:
+    assignees:
       - "kohbis"
