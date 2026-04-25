@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.9](https://github.com/kohbis/rslack/compare/v0.5.8...v0.5.9) (2026-04-25)
+
+
+### Miscellaneous Chores
+
+* **deps:** bump actions/create-github-app-token from 1 to 3 ([7a625e2](https://github.com/kohbis/rslack/commit/7a625e215a6b941e3b430db3e20d22290079c934))
+* **deps:** bump clap from 4.6.0 to 4.6.1 ([5cf55fc](https://github.com/kohbis/rslack/commit/5cf55fc49184e2a8b43f5b7652e74d722d2c577a))
+* **deps:** bump googleapis/release-please-action from 4 to 5 ([bf92a6f](https://github.com/kohbis/rslack/commit/bf92a6fcf369b714c220a3c0f2c5d28a129af667))
+* **deps:** bump libc from 0.2.185 to 0.2.186 ([2286a7c](https://github.com/kohbis/rslack/commit/2286a7c73460aee7caa6777c8700cdf86de2fd7d))
+* **deps:** bump rustls-webpki from 0.103.10 to 0.103.13 ([3c044d1](https://github.com/kohbis/rslack/commit/3c044d11f7321939dffbf111beed53b1ee5e223d))
+* **deps:** bump tokio from 1.51.1 to 1.52.1 ([c350e9f](https://github.com/kohbis/rslack/commit/c350e9f77a2e5e59e55f6fbf27a64ceaf421c428))
+
 ## [0.5.8](https://github.com/kohbis/rslack/compare/v0.5.7...v0.5.8) (2026-04-14)
 
 
