@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.10](https://github.com/kohbis/rslack/compare/v0.5.9...v0.5.10) (2026-06-21)
+
+
+### Miscellaneous Chores
+
+* **deps:** bump chrono from 0.4.44 to 0.4.45 ([0dd9c78](https://github.com/kohbis/rslack/commit/0dd9c785debb3f1c3c17696c164c9c6097978313))
+* **deps:** bump reqwest from 0.13.3 to 0.13.4 ([6c20340](https://github.com/kohbis/rslack/commit/6c20340f4509c20959f23bf61b0df2b152be2d63))
+* **deps:** bump serde_json from 1.0.149 to 1.0.150 ([89a9542](https://github.com/kohbis/rslack/commit/89a95423f67dcbc52620de19d00900b3d64ea3fa))
+* **deps:** bump serial_test from 3.4.0 to 3.5.0 ([63ddf3c](https://github.com/kohbis/rslack/commit/63ddf3c0582529748a4f1f551862b226f5f72b7c))
+* **deps:** bump tokio from 1.52.1 to 1.52.2 ([c171377](https://github.com/kohbis/rslack/commit/c171377c2aef561444eeb45371920eff2fd11612))
+* **deps:** bump tokio from 1.52.2 to 1.52.3 ([649e891](https://github.com/kohbis/rslack/commit/649e8919355e52f78c7a727e08c58e44dc21b9ab))
+
 ## [0.5.9](https://github.com/kohbis/rslack/compare/v0.5.8...v0.5.9) (2026-04-25)
 
 
