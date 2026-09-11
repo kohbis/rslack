@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.11](https://github.com/kohbis/rslack/compare/v0.5.10...v0.5.11) (2026-09-11)
+
+
+### Miscellaneous Chores
+
+* **deps:** bump clap from 4.6.3 to 4.6.6 ([f03c975](https://github.com/kohbis/rslack/commit/f03c975090aea0f674c7ae77649bc0b63a688e03))
+* **deps:** bump dirs from 6.0.0 to 7.0.0 ([c27f1e7](https://github.com/kohbis/rslack/commit/c27f1e72d19e92937a462ea1fd5507cce7b187aa))
+* **deps:** bump serial_test from 3.5.0 to 4.0.1 ([ba209f2](https://github.com/kohbis/rslack/commit/ba209f2c13e4855c8aa52a7755cfc95dd16e7943))
+
 ## [0.5.10](https://github.com/kohbis/rslack/compare/v0.5.9...v0.5.10) (2026-08-01)
 
 
