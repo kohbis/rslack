@@ -55,13 +55,13 @@ cargo build --release # Release build
 cargo test           # Run all tests
 ```
 
-Test fixtures are located in `tests/fixtures/`.
+Tests are unit tests inside each module. Slack API calls are mocked with `mockito`, serving JSON from `tests/fixtures/`. Tests that modify environment variables use `#[serial]` (`serial_test`) so they don't race.
 
 ### Code Style
 
-- Follow standard Rust conventions (rustfmt, clippy)
+- CI runs `cargo fmt -- --check` and `cargo test`; run both before committing
+- Follow clippy suggestions (not enforced in CI)
 - Use `anyhow` for error handling
-- Async functions should use `async`/`await` with Tokio runtime
 
 ### Key Dependencies
 
