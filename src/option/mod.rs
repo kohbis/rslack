@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Parser;
 
 /// Default number of messages to fetch
@@ -22,6 +24,10 @@ pub struct Opt {
     /// Number of messages to fetch (default: 10)
     #[arg(short, long)]
     pub limit: Option<usize>,
+
+    /// Image file to upload (message is posted as its comment)
+    #[arg(short, long, conflicts_with = "read")]
+    pub image: Option<PathBuf>,
 }
 
 impl Opt {
@@ -42,6 +48,7 @@ mod tests {
                 message: None,
                 read: false,
                 limit: None,
+                image: None,
             },
             Opt::parse_from::<[&str; 0], &str>([]),
         )
@@ -59,5 +66,17 @@ mod tests {
         let opts = Opt::parse_from(["rslack", "-r", "-l", "20"]);
         assert!(opts.read);
         assert_eq!(opts.limit, Some(20));
+    }
+
+    #[test]
+    fn argument_with_image() {
+        let opts = Opt::parse_from(["rslack", "-c", "general", "-i", "image.png", "-m", "hi"]);
+        assert_eq!(opts.image, Some(PathBuf::from("image.png")));
+        assert_eq!(opts.message, Some("hi".to_string()));
+    }
+
+    #[test]
+    fn argument_with_image_and_read_conflicts() {
+        assert!(Opt::try_parse_from(["rslack", "-r", "-i", "image.png"]).is_err());
     }
 }

@@ -9,6 +9,7 @@ This file provides guidance for AI coding agents working on this project.
 - Interactive channel selection with vim-like navigation
 - Multi-line message editor
 - Read messages from channels
+- Upload images to channels
 - Command-line options for direct channel and message specification
 
 ## Tech Stack
@@ -77,7 +78,7 @@ Tests are unit tests inside each module. Slack API calls are mocked with `mockit
 ## Slack API Integration
 
 - Uses Slack Web API
-- Requires User Token Scopes: `channels:read`, `channels:history`, `chat:write`
+- Requires User Token Scopes: `channels:read`, `channels:history`, `chat:write`, `files:write`
 - Token is configured via `RSLACK_TOKEN` env var or `~/.rslack` config file
 
 ## Common Tasks

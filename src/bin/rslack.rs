@@ -22,6 +22,13 @@ async fn run() -> Result<()> {
     let mut message = opts.message.unwrap_or_default();
     let read_mode = opts.read;
     let limit = opts.limit.unwrap_or(DEFAULT_MESSAGE_LIMIT);
+    let image = opts.image;
+
+    if let Some(path) = &image {
+        if !path.is_file() {
+            return Err(anyhow!("{}: No such file", path.display()));
+        }
+    }
 
     let config = Config::new(None)?;
     let slack_client = slack::SlackClient::new(&config, SLACK_URL);
@@ -57,8 +64,8 @@ async fn run() -> Result<()> {
         return Ok(());
     }
 
-    // Write mode: compose and post message
-    if Editor::needs_input(&message) {
+    // Write mode: compose and post message (the comment is optional when uploading an image)
+    if image.is_none() && Editor::needs_input(&message) {
         let mut editor = Editor::new();
         match editor.run(stdin(), &mut stdout, &channel)? {
             EditorResult::Submitted(msg) => message = msg,
@@ -67,6 +74,14 @@ async fn run() -> Result<()> {
     }
 
     drop(stdout);
+
+    if let Some(path) = &image {
+        slack_client
+            .upload_file(&channel_info.id, path, Some(&message))
+            .await?;
+        println!("[Success] #{}\n {}\n {}", channel, path.display(), message);
+        return Ok(());
+    }
 
     slack_client.post_message(&channel, &message).await?;
     println!("[Success] #{}\n {}", channel, message);
