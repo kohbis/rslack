@@ -371,10 +371,6 @@ fn replace_mentions(text: &str, mut resolve: impl FnMut(&str) -> Option<String>)
 }
 
 impl SlackChannels {
-    pub fn len(&self) -> usize {
-        self.channels.len()
-    }
-
     pub fn channel_names(&self) -> Vec<String> {
         self.channels
             .iter()
@@ -430,7 +426,7 @@ mod tests {
         let config = Config::new(None).unwrap();
         let slack_client = SlackClient::new(&config, &server.url());
         let channels = slack_client.get_channels().await.unwrap();
-        assert_eq!(channels.len(), 2);
+        assert_eq!(channels.channels.len(), 2);
     }
 
     #[tokio::test]

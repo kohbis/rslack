@@ -90,7 +90,7 @@ impl Editor {
             "{}{}#{}{}{}{}",
             termion::cursor::Goto(1, 1),
             termion::clear::All,
-            &channel,
+            channel,
             termion::cursor::Goto(1, 2),
             USAGE_EDITOR,
             termion::cursor::Goto(1, MESSAGE_ROW)
