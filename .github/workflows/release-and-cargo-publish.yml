@@ -19,7 +19,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-      - uses: swatinem/rust-cache@v2
+      - uses: Swatinem/rust-cache@v2
       - name: Build
         run: >
           cargo build
@@ -46,7 +46,7 @@ jobs:
       - uses: actions/create-github-app-token@v3
         id: app-token
         with:
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
       - uses: googleapis/release-please-action@v5
@@ -132,7 +132,7 @@ jobs:
       - uses: actions/create-github-app-token@v3
         id: app-token
         with:
-          app-id: ${{ secrets.APP_ID }}
+          client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: homebrew-rslack
