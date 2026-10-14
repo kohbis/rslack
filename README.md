@@ -11,6 +11,7 @@
 - Interactive channel selection with vim-like navigation (h,j,k,l or arrow keys)
 - Multi-line message editor with cursor movement
 - **Read messages from channels** (latest N messages, default: 10)
+- **Upload images to channels** (with an optional comment)
 - Command-line options for direct channel and message specification
 - Simple configuration via environment variables or config file
 
@@ -45,6 +46,7 @@ cargo build --release
    - `channels:read` - To list available channels
    - `channels:history` - To read messages from channels
    - `chat:write` - To post messages to channels
+   - `files:write` - To upload images to channels
 3. Click **Install App to Workspace**
 4. Copy the **OAuth Access Token** from the **OAuth Tokens & Redirect URLs** section
 
@@ -113,6 +115,9 @@ rslack -r -c general
 
 # Read a specific number of messages
 rslack -r -c general -l 20
+
+# Upload an image (the message is optional and posted as its comment)
+rslack -c general -i ./screenshot.png -m "Look at this"
 ```
 
 Options:
@@ -120,6 +125,7 @@ Options:
 - `-m, --message <MESSAGE>`: Specify the message to post
 - `-r, --read`: Read messages from channel instead of posting
 - `-l, --limit <LIMIT>`: Number of messages to fetch (default: 10)
+- `-i, --image <IMAGE>`: Image file to upload (cannot be combined with `-r`)
 
 ## Development
 
