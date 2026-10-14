@@ -104,7 +104,9 @@ async fn run() -> Result<()> {
         return Ok(());
     }
 
-    slack_client.post_message(&channel, &message).await?;
+    slack_client
+        .post_message(&channel_info.id, &message)
+        .await?;
     println!("[Success] #{}\n {}", channel, message);
 
     Ok(())
