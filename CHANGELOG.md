@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.5.12](https://github.com/kohbis/rslack/compare/v0.5.11...v0.5.12) (2026-10-14)
+
+
+### Features
+
+* upload images to a channel with --image ([23ad765](https://github.com/kohbis/rslack/commit/23ad765ca41015cb79c115863f1b5dd2f5377fe8))
+* upload images to a channel with --image ([a1bbf5b](https://github.com/kohbis/rslack/commit/a1bbf5b10f8b33427fb8c05e0d3c541e0b59972c))
+
+
+### Documentation
+
+* align AGENTS.md with CI and drop CLAUDE.md ([54765cd](https://github.com/kohbis/rslack/commit/54765cd999ce1d499412d355d2d64334b8c5c5ad))
+
 ## [0.5.11](https://github.com/kohbis/rslack/compare/v0.5.10...v0.5.11) (2026-09-27)
 
 
