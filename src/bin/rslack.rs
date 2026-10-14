@@ -1,4 +1,5 @@
 use std::io::{stdin, stdout};
+use std::process::ExitCode;
 
 use anyhow::{anyhow, Result};
 use termion::raw::IntoRawMode;
@@ -12,9 +13,13 @@ use rslack::option::{MessageFormat, Opt, DEFAULT_MESSAGE_LIMIT};
 use rslack::slack;
 
 #[tokio::main]
-async fn main() {
-    if let Err(err) = run().await {
-        eprintln!("{}", err);
+async fn main() -> ExitCode {
+    match run().await {
+        Ok(()) => ExitCode::SUCCESS,
+        Err(err) => {
+            eprintln!("{}", err);
+            ExitCode::FAILURE
+        }
     }
 }
 
