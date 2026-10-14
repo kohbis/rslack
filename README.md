@@ -117,6 +117,10 @@ rslack -c general
 # Post a specific message to a specific channel
 rslack -c general -m "Hello, world!"
 
+# Post a message piped from another command (-c is required)
+echo "deploy done" | rslack -c ops
+./run-tests.sh 2>&1 | tail -20 | rslack -c ci
+
 # Read messages from a channel (default: 10 messages)
 rslack -r -c general
 
@@ -132,7 +136,7 @@ rslack -c general -i ./screenshot.png -m "Look at this"
 
 Options:
 - `-c, --channel <CHANNEL>`: Specify the channel
-- `-m, --message <MESSAGE>`: Specify the message to post
+- `-m, --message <MESSAGE>`: Specify the message to post (when omitted and stdin is piped, the message is read from stdin)
 - `-r, --read`: Read messages from channel instead of posting
 - `-l, --limit <LIMIT>`: Number of messages to fetch (default: 10)
 - `-f, --format <FORMAT>`: Format of messages read with `-r`: `text` (default) or `table`

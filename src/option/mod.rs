@@ -1,5 +1,7 @@
+use std::io::Read;
 use std::path::PathBuf;
 
+use anyhow::Result;
 use clap::{Parser, ValueEnum};
 
 /// Default number of messages to fetch
@@ -23,7 +25,7 @@ pub struct Opt {
     #[arg(short, long)]
     pub channel: Option<String>,
 
-    /// Message to post
+    /// Message to post (read from stdin when it is piped and this is omitted)
     #[arg(short, long)]
     pub message: Option<String>,
 
@@ -48,6 +50,14 @@ impl Opt {
     pub fn get_opts() -> Self {
         Opt::parse()
     }
+}
+
+/// Read a message piped to stdin, dropping the trailing newlines that `echo` and
+/// most commands add
+pub fn read_message<R: Read>(mut reader: R) -> Result<String> {
+    let mut message = String::new();
+    reader.read_to_string(&mut message)?;
+    Ok(message.trim_end_matches(['\n', '\r']).to_string())
 }
 
 #[cfg(test)]
@@ -102,6 +112,20 @@ mod tests {
     fn argument_with_format_requires_read() {
         assert!(Opt::try_parse_from(["rslack", "--format", "table"]).is_err());
         assert!(Opt::try_parse_from(["rslack", "-r", "--format", "csv"]).is_err());
+    }
+
+    #[test]
+    fn read_message_drops_trailing_newlines() {
+        let message = read_message("deploy done\n".as_bytes()).unwrap();
+        assert_eq!(message, "deploy done");
+        let message = read_message("line 1\n\n  line 2  \r\n\n".as_bytes()).unwrap();
+        assert_eq!(message, "line 1\n\n  line 2  ");
+        assert_eq!(read_message("".as_bytes()).unwrap(), "");
+    }
+
+    #[test]
+    fn read_message_with_invalid_utf8() {
+        assert!(read_message(&b"\xff\xfe"[..]).is_err());
     }
 
     #[test]

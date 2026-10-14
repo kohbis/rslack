@@ -1,7 +1,7 @@
 use std::io::{stdin, stdout};
 use std::process::ExitCode;
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, bail, Result};
 use termion::raw::IntoRawMode;
 use termion::screen::IntoAlternateScreen;
 
@@ -9,7 +9,7 @@ use rslack::config::{Config, SLACK_URL};
 use rslack::console::{
     print_message_table, print_messages, ChannelSelector, Editor, EditorResult, SelectionResult,
 };
-use rslack::option::{MessageFormat, Opt, DEFAULT_MESSAGE_LIMIT};
+use rslack::option::{read_message, MessageFormat, Opt, DEFAULT_MESSAGE_LIMIT};
 use rslack::slack;
 
 #[tokio::main]
@@ -38,6 +38,17 @@ async fn run() -> Result<()> {
         }
     }
 
+    // A piped stdin carries the message (e.g. `echo hi | rslack -c general`),
+    // so it can't also be used for the interactive screens
+    let interactive = termion::is_tty(&stdin());
+    if !read_mode && message.is_empty() && !interactive {
+        message = read_message(stdin().lock())?;
+        // The comment is optional when uploading an image
+        if image.is_none() && message.trim().is_empty() {
+            bail!("No message to post: stdin is empty");
+        }
+    }
+
     let config = Config::new(None)?;
     let slack_client = slack::SlackClient::new(&config, SLACK_URL);
     let channels = slack_client.get_channels().await?;
@@ -48,6 +59,12 @@ async fn run() -> Result<()> {
 
     // Switch to the interactive screen only when something has to be selected or typed
     let needs_selection = selector.needs_selection(&channel);
+    if needs_selection && !interactive {
+        if channel.trim().is_empty() {
+            bail!("Specify a channel with -c when stdin is not a terminal");
+        }
+        bail!("Channel '{}' not found", channel);
+    }
     // The comment is optional when uploading an image
     let needs_editor = !read_mode && image.is_none() && Editor::needs_input(&message);
     if needs_selection || needs_editor {
