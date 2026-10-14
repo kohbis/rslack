@@ -6,7 +6,9 @@ use std::io::{BufRead, BufReader};
 use std::path::{Path, PathBuf};
 
 const RSLACK_TOKEN: &str = "RSLACK_TOKEN";
-const CONFIG_FILE: &str = ".rslack";
+const XDG_CONFIG_HOME: &str = "XDG_CONFIG_HOME";
+const CONFIG_DIR: &str = "rslack";
+const CONFIG_FILE: &str = "config";
 
 /// Default Slack API base URL
 pub const SLACK_URL: &str = "https://slack.com";
@@ -22,15 +24,16 @@ impl Config {
             token: String::new(),
         };
 
-        config.read_from_env()?;
-
-        if let Some(path) = config_path {
-            config.read_from_file(&path).ok();
-        } else {
-            let home = dirs::home_dir().ok_or(anyhow!("Home directory not found."))?;
-            let path = home.join(CONFIG_FILE);
-            config.read_from_file(&path).ok();
+        let path = match config_path {
+            Some(path) => path,
+            None => default_config_path()?,
+        };
+        if config.read_from_file(&path).is_ok() {
+            warn_if_insecure(&path);
         }
+
+        // Environment variable takes precedence over the config file.
+        config.read_from_env()?;
 
         config.validate()?;
 
@@ -85,6 +88,37 @@ impl Config {
     }
 }
 
+/// Returns `$XDG_CONFIG_HOME/rslack/config`, falling back to `~/.config/rslack/config`.
+fn default_config_path() -> Result<PathBuf> {
+    let base = match env::var_os(XDG_CONFIG_HOME).map(PathBuf::from) {
+        // The XDG spec says relative paths must be ignored.
+        Some(dir) if dir.is_absolute() => dir,
+        _ => dirs::home_dir()
+            .ok_or(anyhow!("Home directory not found."))?
+            .join(".config"),
+    };
+
+    Ok(base.join(CONFIG_DIR).join(CONFIG_FILE))
+}
+
+#[cfg(unix)]
+fn warn_if_insecure(path: &Path) {
+    use std::os::unix::fs::PermissionsExt;
+
+    if let Ok(metadata) = std::fs::metadata(path) {
+        if metadata.permissions().mode() & 0o077 != 0 {
+            eprintln!(
+                "Warning: {} is accessible by other users. Run `chmod 600 {}`.",
+                path.display(),
+                path.display()
+            );
+        }
+    }
+}
+
+#[cfg(not(unix))]
+fn warn_if_insecure(_path: &Path) {}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -92,6 +126,7 @@ mod tests {
 
     fn setup() {
         env::remove_var(RSLACK_TOKEN);
+        env::remove_var(XDG_CONFIG_HOME);
     }
 
     #[test]
@@ -149,10 +184,41 @@ mod tests {
         env::set_var(RSLACK_TOKEN, "token-from-env-123");
 
         let expected = Config {
-            token: String::from("token-from-file-123"),
+            token: String::from("token-from-env-123"),
         };
         let config_path = PathBuf::from("tests/fixtures/config/config.test.valid");
         let actual = Config::new(Some(config_path)).unwrap();
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    #[serial]
+    fn default_config_path_with_xdg_config_home() {
+        setup();
+        env::set_var(XDG_CONFIG_HOME, "/xdg/config");
+
+        let actual = default_config_path().unwrap();
+        assert_eq!(actual, PathBuf::from("/xdg/config/rslack/config"));
+    }
+
+    #[test]
+    #[serial]
+    fn default_config_path_without_xdg_config_home() {
+        setup();
+
+        let actual = default_config_path().unwrap();
+        let expected = dirs::home_dir().unwrap().join(".config/rslack/config");
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    #[serial]
+    fn default_config_path_ignores_relative_xdg_config_home() {
+        setup();
+        env::set_var(XDG_CONFIG_HOME, "relative/config");
+
+        let actual = default_config_path().unwrap();
+        let expected = dirs::home_dir().unwrap().join(".config/rslack/config");
         assert_eq!(actual, expected);
     }
 

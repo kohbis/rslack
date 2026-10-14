@@ -62,13 +62,17 @@ export RSLACK_TOKEN=xoxp-your-token-here
 
 #### Option 2: Configuration File
 
-Create a `.rslack` file in your home directory:
+Create `$XDG_CONFIG_HOME/rslack/config` (defaults to `~/.config/rslack/config`):
 
 ```bash
-echo "RSLACK_TOKEN=xoxp-your-token-here" > ${HOME}/.rslack
+mkdir -p ~/.config/rslack
+echo "RSLACK_TOKEN=xoxp-your-token-here" > ~/.config/rslack/config
+chmod 600 ~/.config/rslack/config
 ```
 
-**Note:** If both methods are used, the configuration file takes precedence.
+rslack warns if the file is readable by other users.
+
+**Note:** If both methods are used, the environment variable takes precedence.
 
 ## Usage
 
