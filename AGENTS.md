@@ -79,7 +79,7 @@ Tests are unit tests inside each module. Slack API calls are mocked with `mockit
 
 - Uses Slack Web API
 - Requires User Token Scopes: `channels:read`, `channels:history`, `chat:write`, `files:write`
-- Token is configured via `RSLACK_TOKEN` env var or `~/.rslack` config file
+- Token is configured via `RSLACK_TOKEN` env var (takes precedence) or `$XDG_CONFIG_HOME/rslack/config` (default `~/.config/rslack/config`)
 
 ## Common Tasks
 
