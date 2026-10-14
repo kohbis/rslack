@@ -38,16 +38,29 @@ async fn run() -> Result<()> {
     let max_col_size = channels.max_channel_size() + 1;
     let selector = ChannelSelector::new(channel_names.clone(), max_col_size);
 
-    let stdout = stdout().into_raw_mode()?;
-    let mut stdout = stdout.into_alternate_screen()?;
+    // Switch to the interactive screen only when something has to be selected or typed
+    let needs_selection = selector.needs_selection(&channel);
+    // The comment is optional when uploading an image
+    let needs_editor = !read_mode && image.is_none() && Editor::needs_input(&message);
+    if needs_selection || needs_editor {
+        let stdout = stdout().into_raw_mode()?;
+        let mut stdout = stdout.into_alternate_screen()?;
 
-    if selector.needs_selection(&channel) {
-        match selector.run(stdin(), &mut stdout)? {
-            SelectionResult::Selected(selected) => channel = selected,
-            SelectionResult::Cancelled => return Ok(()),
+        if needs_selection {
+            match selector.run(stdin(), &mut stdout)? {
+                SelectionResult::Selected(selected) => channel = selected,
+                SelectionResult::Cancelled => return Ok(()),
+            }
+        }
+
+        if needs_editor {
+            let mut editor = Editor::new();
+            match editor.run(stdin(), &mut stdout, &channel)? {
+                EditorResult::Submitted(msg) => message = msg,
+                EditorResult::Cancelled => return Ok(()),
+            }
         }
     }
-    selector.draw(&mut stdout, &channel);
 
     // Get channel ID for API calls that require it
     let channel_info = channels
@@ -56,25 +69,13 @@ async fn run() -> Result<()> {
 
     // Read mode: fetch and display messages
     if read_mode {
-        drop(stdout);
-
         let messages = slack_client.get_messages(&channel_info.id, limit).await?;
 
         print_messages(&channel, &messages.messages);
         return Ok(());
     }
 
-    // Write mode: compose and post message (the comment is optional when uploading an image)
-    if image.is_none() && Editor::needs_input(&message) {
-        let mut editor = Editor::new();
-        match editor.run(stdin(), &mut stdout, &channel)? {
-            EditorResult::Submitted(msg) => message = msg,
-            EditorResult::Cancelled => return Ok(()),
-        }
-    }
-
-    drop(stdout);
-
+    // Write mode: post the message or upload the image
     if let Some(path) = &image {
         slack_client
             .upload_file(&channel_info.id, path, Some(&message))
