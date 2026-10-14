@@ -1,5 +1,37 @@
 # Changelog
 
+## [0.6.1](https://github.com/kohbis/rslack/compare/v0.6.0...v0.6.1) (2026-10-14)
+
+
+### Features
+
+* move the cursor within a line and edit at the cursor in the editor ([0c57b96](https://github.com/kohbis/rslack/commit/0c57b9604768bced376159ea9ec8c5f8c2d5fb75))
+* show user names, mentions and attachments when reading messages ([4b2bba9](https://github.com/kohbis/rslack/commit/4b2bba9d0e20b940d0dd6257acc537ff2cc2cf69))
+
+
+### Bug Fixes
+
+* don't flash the channel list when the channel is given ([6d8620f](https://github.com/kohbis/rslack/commit/6d8620f3abe57983c683b9c0ef295d8755bc3a63))
+* editor crash, new line position, line breaks and cursor with wide characters ([92fb1fa](https://github.com/kohbis/rslack/commit/92fb1fa85fc13e53725170bb411ed3a51ed24bb9))
+* exit with status 1 on errors and ignore an empty RSLACK_TOKEN ([bb37cde](https://github.com/kohbis/rslack/commit/bb37cdee901fc48b56b18c013bbea8f42fc63779))
+* list all unarchived channels and don't panic on narrow terminals ([f1783e8](https://github.com/kohbis/rslack/commit/f1783e839c7ed00c930f48d54f95e71bff345d61))
+
+
+### Miscellaneous Chores
+
+* remove unused MessageViewer and enforce clippy in CI ([2517350](https://github.com/kohbis/rslack/commit/25173504aec25be0063073af6e7db8254e89a5f8))
+
+
+### Code Refactoring
+
+* share request handling in SlackClient and type API errors ([6dd434d](https://github.com/kohbis/rslack/commit/6dd434de8f260eef4dbd995087d9612d75c070dd))
+
+
+### Continuous Integration
+
+* authenticate the GitHub App with client-id ([3b87a41](https://github.com/kohbis/rslack/commit/3b87a41fe5b61fb72f2c43f39889f1eca12365d9))
+* run Update Formula in homebrew-rslack after a release ([0592f8d](https://github.com/kohbis/rslack/commit/0592f8d300177c24ebd67024c22b7145f4e26589))
+
 ## [0.6.0](https://github.com/kohbis/rslack/compare/v0.5.12...v0.6.0) (2026-10-14)
 
 
