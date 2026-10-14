@@ -77,7 +77,7 @@ async fn run() -> Result<()> {
             .resolve_user_names(&mut messages.messages)
             .await
         {
-            let hint = if err.to_string() == "missing_scope" {
+            let hint = if slack::SlackApiError::is(&err, "missing_scope") {
                 " (add the users:read scope to your Slack app and reinstall it)"
             } else {
                 ""
