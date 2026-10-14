@@ -115,7 +115,7 @@ impl Table {
             .iter()
             .map(|names| {
                 names
-                    .into_iter()
+                    .iter()
                     .map(|cell| {
                         // Highlight selected channel
                         let (fg_color, bg_color) = if cell == selected {
@@ -163,7 +163,7 @@ impl Table {
     }
 
     fn print_line(stdout: &mut dyn Write, line: &str) {
-        write!(stdout, "{}{}", line, "\r\n").unwrap();
+        write!(stdout, "{}\r\n", line).unwrap();
     }
 
     /*
@@ -173,11 +173,7 @@ impl Table {
         let size = first_row_border.len() - 2;
         let margin = size - self.name.len();
         let margin_left = margin / 2;
-        let margin_right = if margin % 2 == 0 {
-            margin_left
-        } else {
-            margin_left + 1
-        };
+        let margin_right = margin - margin_left;
 
         let head = [
             &WHITESPACE.repeat(margin_left),

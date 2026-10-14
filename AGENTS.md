@@ -60,8 +60,7 @@ Tests are unit tests inside each module. Slack API calls are mocked with `mockit
 
 ### Code Style
 
-- CI runs `cargo fmt -- --check` and `cargo test`; run both before committing
-- Follow clippy suggestions (not enforced in CI)
+- CI runs `cargo fmt -- --check`, `cargo clippy --all-targets -- -D warnings` and `cargo test`; run all three before committing
 - Use `anyhow` for error handling
 
 ### Key Dependencies
