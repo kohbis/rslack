@@ -4,6 +4,7 @@ use std::path::Path;
 use anyhow::{anyhow, Result};
 use reqwest::{Client, RequestBuilder};
 use serde::Deserialize;
+use unicode_width::UnicodeWidthStr;
 use url::Url;
 
 use crate::config::Config;
@@ -17,7 +18,17 @@ pub struct SlackResponse {
     pub upload_url: Option<String>,
     pub file_id: Option<String>,
     pub user: Option<SlackUser>,
+    pub response_metadata: Option<ResponseMetadata>,
 }
+
+/// Pagination info of list methods such as conversations.list
+#[derive(Deserialize)]
+pub struct ResponseMetadata {
+    pub next_cursor: Option<String>,
+}
+
+/// Channels fetched per conversations.list call (Slack recommends at most 200)
+const CHANNELS_PER_PAGE: &str = "200";
 
 pub struct SlackChannels {
     pub channels: Vec<SlackChannel>,
@@ -148,14 +159,32 @@ impl SlackClient {
     }
 
     /*
-     * Get slack channels.
+     * Get unarchived slack channels, following pagination.
      */
     pub async fn get_channels(&self) -> Result<SlackChannels> {
-        let res = self.get("conversations.list", &[]).await?;
-        match res.channels {
-            Some(channels) => Ok(SlackChannels::from(channels)),
-            None => Err(anyhow!("No channels found")),
+        let mut channels = vec![];
+        let mut cursor: Option<String> = None;
+        loop {
+            let mut query = vec![("exclude_archived", "true"), ("limit", CHANNELS_PER_PAGE)];
+            if let Some(cursor) = &cursor {
+                query.push(("cursor", cursor));
+            }
+            let res = self.get("conversations.list", &query).await?;
+            channels.extend(res.channels.unwrap_or_default());
+
+            cursor = res
+                .response_metadata
+                .and_then(|metadata| metadata.next_cursor)
+                .filter(|next_cursor| !next_cursor.is_empty());
+            if cursor.is_none() {
+                break;
+            }
         }
+
+        if channels.is_empty() {
+            return Err(anyhow!("No channels found"));
+        }
+        Ok(SlackChannels::from(channels))
     }
 
     /*
@@ -353,11 +382,13 @@ impl SlackChannels {
             .collect()
     }
 
+    /// Display width of the longest channel name
     pub fn max_channel_size(&self) -> usize {
-        match self.channel_names().iter().max_by_key(|name| name.len()) {
-            Some(name) => name.len(),
-            _ => 80,
-        }
+        self.channels
+            .iter()
+            .map(|channel| channel.name.width())
+            .max()
+            .unwrap_or(0)
     }
 
     pub fn find_by_name(&self, name: &str) -> Option<&SlackChannel> {
@@ -385,6 +416,10 @@ mod tests {
         let mut server = mockito::Server::new_async().await;
         server
             .mock("GET", "/api/conversations.list")
+            .match_query(mockito::Matcher::AllOf(vec![
+                mockito::Matcher::UrlEncoded("exclude_archived".into(), "true".into()),
+                mockito::Matcher::UrlEncoded("limit".into(), "200".into()),
+            ]))
             .with_status(200)
             .with_header("content-type", "application/json")
             .with_body_from_file("tests/fixtures/slack/conversations_list/ok.json")
@@ -396,6 +431,69 @@ mod tests {
         let slack_client = SlackClient::new(&config, &server.url());
         let channels = slack_client.get_channels().await.unwrap();
         assert_eq!(channels.len(), 2);
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn it_get_channels_with_pagination() {
+        let mut server = mockito::Server::new_async().await;
+        let first = server
+            .mock("GET", "/api/conversations.list")
+            .match_query(mockito::Matcher::Regex(
+                "^exclude_archived=true&limit=200$".into(),
+            ))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{"ok":true,"channels":[{"id":"C1","name":"apple"}],
+                    "response_metadata":{"next_cursor":"page2"}}"#,
+            )
+            .expect(1)
+            .create_async()
+            .await;
+        let second = server
+            .mock("GET", "/api/conversations.list")
+            .match_query(mockito::Matcher::UrlEncoded(
+                "cursor".into(),
+                "page2".into(),
+            ))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{"ok":true,"channels":[{"id":"C2","name":"grape"}],
+                    "response_metadata":{"next_cursor":""}}"#,
+            )
+            .expect(1)
+            .create_async()
+            .await;
+
+        std::env::set_var("RSLACK_TOKEN", "test-token");
+        let config = Config::new(None).unwrap();
+        let slack_client = SlackClient::new(&config, &server.url());
+        let channels = slack_client.get_channels().await.unwrap();
+        assert_eq!(channels.channel_names(), ["apple", "grape"]);
+        first.assert_async().await;
+        second.assert_async().await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn it_get_channels_with_no_channels() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/api/conversations.list")
+            .match_query(mockito::Matcher::Any)
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"ok":true,"channels":[]}"#)
+            .create_async()
+            .await;
+
+        std::env::set_var("RSLACK_TOKEN", "test-token");
+        let config = Config::new(None).unwrap();
+        let slack_client = SlackClient::new(&config, &server.url());
+        let err = slack_client.get_channels().await.err().unwrap();
+        assert_eq!(err.to_string(), "No channels found");
     }
 
     #[test]
@@ -439,6 +537,12 @@ mod tests {
             ],
         };
         assert_eq!(6, slack_channels.max_channel_size());
+
+        let wide = SlackChannels::from(vec![SlackChannel {
+            id: "ID004".to_string(),
+            name: "雑談".to_string(),
+        }]);
+        assert_eq!(4, wide.max_channel_size());
     }
 
     #[test]

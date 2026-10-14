@@ -86,8 +86,9 @@ impl Table {
         }
     }
 
+    /// Channels per row; at least one, even when a name is wider than the terminal
     pub fn col_count(&self) -> usize {
-        term_size().0 as usize / (self.max_col_size + 2)
+        (term_size().0 as usize / (self.max_col_size + 2)).max(1)
     }
 
     pub fn chunked_data(&self) -> Vec<Vec<String>> {
@@ -229,6 +230,14 @@ mod tests {
         assert_eq!(pad("ab", 4), "ab  ");
         assert_eq!(pad("あ", 4), "あ  ");
         assert_eq!(pad("abcde", 4), "abcde");
+    }
+
+    #[test]
+    fn chunked_data_with_column_wider_than_terminal() {
+        let data = vec!["a".to_string(), "b".to_string()];
+        let table = Table::new("test".to_string(), data, u16::MAX as usize);
+        assert_eq!(table.col_count(), 1);
+        assert_eq!(table.chunked_data(), [["a"], ["b"]]);
     }
 
     #[test]
