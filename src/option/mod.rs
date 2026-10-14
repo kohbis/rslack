@@ -1,9 +1,19 @@
 use std::path::PathBuf;
 
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 
 /// Default number of messages to fetch
 pub const DEFAULT_MESSAGE_LIMIT: usize = 10;
+
+/// How to display messages read from a channel
+#[derive(Clone, Copy, Debug, Default, PartialEq, ValueEnum)]
+pub enum MessageFormat {
+    /// Each message as a header line followed by its text
+    #[default]
+    Text,
+    /// A table with DATE, USER and MESSAGE columns
+    Table,
+}
 
 #[derive(Parser)]
 #[cfg_attr(test, derive(Debug, PartialEq))]
@@ -28,6 +38,10 @@ pub struct Opt {
     /// Image file to upload (message is posted as its comment)
     #[arg(short, long, conflicts_with = "read")]
     pub image: Option<PathBuf>,
+
+    /// Format of messages read with --read
+    #[arg(short, long, value_enum, default_value_t, requires = "read")]
+    pub format: MessageFormat,
 }
 
 impl Opt {
@@ -49,6 +63,7 @@ mod tests {
                 read: false,
                 limit: None,
                 image: None,
+                format: MessageFormat::Text,
             },
             Opt::parse_from::<[&str; 0], &str>([]),
         )
@@ -73,6 +88,20 @@ mod tests {
         let opts = Opt::parse_from(["rslack", "-c", "general", "-i", "image.png", "-m", "hi"]);
         assert_eq!(opts.image, Some(PathBuf::from("image.png")));
         assert_eq!(opts.message, Some("hi".to_string()));
+    }
+
+    #[test]
+    fn argument_with_format() {
+        let opts = Opt::parse_from(["rslack", "-r", "--format", "table"]);
+        assert_eq!(opts.format, MessageFormat::Table);
+        let opts = Opt::parse_from(["rslack", "-r", "-f", "text"]);
+        assert_eq!(opts.format, MessageFormat::Text);
+    }
+
+    #[test]
+    fn argument_with_format_requires_read() {
+        assert!(Opt::try_parse_from(["rslack", "--format", "table"]).is_err());
+        assert!(Opt::try_parse_from(["rslack", "-r", "--format", "csv"]).is_err());
     }
 
     #[test]

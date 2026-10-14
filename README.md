@@ -47,6 +47,7 @@ cargo build --release
    - `channels:history` - To read messages from channels
    - `chat:write` - To post messages to channels
    - `files:write` - To upload images to channels
+   - `users:read` - To show user names when reading messages (user IDs are shown without it)
 3. Click **Install App to Workspace**
 4. Copy the **OAuth Access Token** from the **OAuth Tokens & Redirect URLs** section
 
@@ -120,6 +121,9 @@ rslack -r -c general
 # Read a specific number of messages
 rslack -r -c general -l 20
 
+# Read messages as a table
+rslack -r -c general --format table
+
 # Upload an image (the message is optional and posted as its comment)
 rslack -c general -i ./screenshot.png -m "Look at this"
 ```
@@ -129,6 +133,7 @@ Options:
 - `-m, --message <MESSAGE>`: Specify the message to post
 - `-r, --read`: Read messages from channel instead of posting
 - `-l, --limit <LIMIT>`: Number of messages to fetch (default: 10)
+- `-f, --format <FORMAT>`: Format of messages read with `-r`: `text` (default) or `table`
 - `-i, --image <IMAGE>`: Image file to upload (cannot be combined with `-r`)
 
 ## Development

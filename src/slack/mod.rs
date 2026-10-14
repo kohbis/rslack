@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::path::Path;
 
 use anyhow::{anyhow, Result};
@@ -15,6 +16,7 @@ pub struct SlackResponse {
     pub messages: Option<Vec<SlackMessage>>,
     pub upload_url: Option<String>,
     pub file_id: Option<String>,
+    pub user: Option<SlackUser>,
 }
 
 pub struct SlackChannels {
@@ -35,9 +37,69 @@ pub struct SlackChannel {
 
 #[derive(Clone, Deserialize)]
 pub struct SlackMessage {
+    #[serde(default)]
     pub text: String,
     pub user: Option<String>,
     pub ts: String,
+    /// Attached files (images, etc.)
+    #[serde(default)]
+    pub files: Vec<SlackFile>,
+    /// Display name of `user`, filled in by `SlackClient::resolve_user_names`
+    #[serde(skip)]
+    pub user_name: Option<String>,
+}
+
+impl SlackMessage {
+    /// Name to show as the author: the resolved name, falling back to the user ID
+    pub fn author(&self) -> &str {
+        self.user_name
+            .as_deref()
+            .or(self.user.as_deref())
+            .unwrap_or("unknown")
+    }
+}
+
+#[derive(Clone, Deserialize)]
+pub struct SlackFile {
+    pub name: Option<String>,
+    pub mimetype: Option<String>,
+    pub permalink: Option<String>,
+}
+
+impl SlackFile {
+    pub fn is_image(&self) -> bool {
+        self.mimetype
+            .as_deref()
+            .is_some_and(|mimetype| mimetype.starts_with("image/"))
+    }
+}
+
+#[derive(Deserialize)]
+pub struct SlackUser {
+    pub name: String,
+    pub real_name: Option<String>,
+    pub profile: Option<SlackUserProfile>,
+}
+
+#[derive(Deserialize)]
+pub struct SlackUserProfile {
+    pub display_name: Option<String>,
+}
+
+impl SlackUser {
+    /// Name as shown in the Slack UI: display name, then real name, then username
+    pub fn display_name(&self) -> &str {
+        [
+            self.profile
+                .as_ref()
+                .and_then(|p| p.display_name.as_deref()),
+            self.real_name.as_deref(),
+        ]
+        .into_iter()
+        .flatten()
+        .find(|name| !name.is_empty())
+        .unwrap_or(&self.name)
+    }
 }
 
 pub struct SlackMessages {
@@ -157,6 +219,68 @@ impl SlackClient {
 
 impl SlackClient {
     /*
+     * Get a user's display name (users.info).
+     */
+    pub async fn get_user_name(&self, user_id: &str) -> Result<String> {
+        let mut url = Url::parse(&format!("{}{}", self.base_url, "/api/users.info"))
+            .map_err(|e| anyhow!("Invalid URL: {}", e))?;
+        url.query_pairs_mut().append_pair("user", user_id);
+
+        let res: SlackResponse = self
+            .client
+            .get(url)
+            .bearer_auth(&self.bearer_token)
+            .send()
+            .await?
+            .json()
+            .await?;
+
+        match Self::check(res)?.user {
+            Some(user) => Ok(user.display_name().to_string()),
+            None => Err(anyhow!("No user found")),
+        }
+    }
+
+    /*
+     * Fill in `user_name` of each message and replace user mentions in its text
+     * with names, looking up each user only once.
+     */
+    pub async fn resolve_user_names(&self, messages: &mut [SlackMessage]) -> Result<()> {
+        let mut user_ids: Vec<String> = vec![];
+        for message in messages.iter() {
+            user_ids.extend(message.user.clone());
+            replace_mentions(&message.text, |id| {
+                user_ids.push(id.to_string());
+                None
+            });
+        }
+
+        let mut names: HashMap<String, String> = HashMap::new();
+        for user_id in user_ids {
+            if names.contains_key(&user_id) {
+                continue;
+            }
+            match self.get_user_name(&user_id).await {
+                Ok(name) => {
+                    names.insert(user_id, name);
+                }
+                // e.g. users of another workspace via Slack Connect: keep showing the ID
+                Err(err) if err.to_string() == "user_not_found" => {}
+                Err(err) => return Err(err),
+            }
+        }
+
+        for message in messages.iter_mut() {
+            message.user_name = message
+                .user
+                .as_ref()
+                .and_then(|user_id| names.get(user_id).cloned());
+            message.text = replace_mentions(&message.text, |id| names.get(id).cloned());
+        }
+        Ok(())
+    }
+
+    /*
      * Upload a file to a channel (files.getUploadURLExternal + files.completeUploadExternal).
      */
     pub async fn upload_file(
@@ -240,6 +364,30 @@ impl SlackClient {
             ))
         }
     }
+}
+
+/// Replace user mentions (`<@U123>` or `<@U123|label>`) with `@name`, where the name
+/// comes from `resolve`, then the label, then the user ID.
+fn replace_mentions(text: &str, mut resolve: impl FnMut(&str) -> Option<String>) -> String {
+    let mut replaced = String::new();
+    let mut rest = text;
+    while let Some(start) = rest.find("<@") {
+        let Some(len) = rest[start..].find('>') else {
+            break;
+        };
+        let mention = &rest[start + 2..start + len];
+        let (user_id, label) = mention.split_once('|').unwrap_or((mention, ""));
+        let name = resolve(user_id)
+            .or_else(|| (!label.is_empty()).then(|| label.to_string()))
+            .unwrap_or_else(|| user_id.to_string());
+
+        replaced.push_str(&rest[..start]);
+        replaced.push('@');
+        replaced.push_str(&name);
+        rest = &rest[start + len + 1..];
+    }
+    replaced.push_str(rest);
+    replaced
 }
 
 impl SlackChannels {
@@ -388,6 +536,147 @@ mod tests {
             messages.messages[0].text,
             "Hello, this is the latest message!"
         );
+    }
+
+    #[test]
+    fn it_get_user_display_name() {
+        let user = |display_name: &str, real_name: Option<&str>| SlackUser {
+            name: "alice".to_string(),
+            real_name: real_name.map(str::to_string),
+            profile: Some(SlackUserProfile {
+                display_name: Some(display_name.to_string()),
+            }),
+        };
+        assert_eq!(
+            user("alice.s", Some("Alice Smith")).display_name(),
+            "alice.s"
+        );
+        assert_eq!(user("", Some("Alice Smith")).display_name(), "Alice Smith");
+        assert_eq!(user("", Some("")).display_name(), "alice");
+        assert_eq!(user("", None).display_name(), "alice");
+    }
+
+    #[test]
+    fn it_get_message_author() {
+        let mut message = message_from(None);
+        assert_eq!(message.author(), "unknown");
+        message.user = Some("U0123456789".to_string());
+        assert_eq!(message.author(), "U0123456789");
+        message.user_name = Some("alice.s".to_string());
+        assert_eq!(message.author(), "alice.s");
+    }
+
+    #[test]
+    fn it_replace_mentions() {
+        let resolve = |id: &str| (id == "U0123456789").then(|| "alice.s".to_string());
+        assert_eq!(
+            replace_mentions(
+                "hi <@U0123456789>, cc <@U0987654321|bob> <@U0000000000>",
+                resolve
+            ),
+            "hi @alice.s, cc @bob @U0000000000"
+        );
+        assert_eq!(
+            replace_mentions("no mention <@ here", resolve),
+            "no mention <@ here"
+        );
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn it_resolve_user_names() {
+        let mut server = mockito::Server::new_async().await;
+        let alice = server
+            .mock("GET", "/api/users.info")
+            .match_query(mockito::Matcher::UrlEncoded(
+                "user".into(),
+                "U0123456789".into(),
+            ))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body_from_file("tests/fixtures/slack/users_info/ok.json")
+            .expect(1)
+            .create_async()
+            .await;
+        let bob = server
+            .mock("GET", "/api/users.info")
+            .match_query(mockito::Matcher::UrlEncoded(
+                "user".into(),
+                "U0987654321".into(),
+            ))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"ok":true,"user":{"id":"U0987654321","name":"bob"}}"#)
+            .expect(1)
+            .create_async()
+            .await;
+        let external = server
+            .mock("GET", "/api/users.info")
+            .match_query(mockito::Matcher::UrlEncoded(
+                "user".into(),
+                "U0000000000".into(),
+            ))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"ok":false,"error":"user_not_found"}"#)
+            .expect(1)
+            .create_async()
+            .await;
+
+        std::env::set_var("RSLACK_TOKEN", "test-token");
+        let config = Config::new(None).unwrap();
+        let slack_client = SlackClient::new(&config, &server.url());
+        let mut messages = vec![
+            message_from(Some("U0123456789")),
+            message_from(Some("U0987654321")),
+            message_from(Some("U0000000000")),
+            message_from(None),
+        ];
+        messages[1].text = "thanks <@U0123456789>".to_string();
+        slack_client
+            .resolve_user_names(&mut messages)
+            .await
+            .unwrap();
+
+        let authors: Vec<&str> = messages.iter().map(|m| m.author()).collect();
+        assert_eq!(authors, ["alice.s", "bob", "U0000000000", "unknown"]);
+        assert_eq!(messages[1].text, "thanks @alice.s");
+        // Each user is looked up only once
+        alice.assert_async().await;
+        bob.assert_async().await;
+        external.assert_async().await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn it_resolve_user_names_with_error() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/api/users.info")
+            .match_query(mockito::Matcher::Any)
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"ok":false,"error":"missing_scope"}"#)
+            .create_async()
+            .await;
+
+        std::env::set_var("RSLACK_TOKEN", "test-token");
+        let config = Config::new(None).unwrap();
+        let slack_client = SlackClient::new(&config, &server.url());
+        let mut messages = vec![message_from(Some("U0123456789"))];
+        let result = slack_client.resolve_user_names(&mut messages).await;
+        assert_eq!(result.err().unwrap().to_string(), "missing_scope");
+        assert_eq!(messages[0].author(), "U0123456789");
+    }
+
+    fn message_from(user: Option<&str>) -> SlackMessage {
+        SlackMessage {
+            text: "hi".to_string(),
+            user: user.map(str::to_string),
+            ts: "1609459800.000100".to_string(),
+            files: vec![],
+            user_name: None,
+        }
     }
 
     #[tokio::test]

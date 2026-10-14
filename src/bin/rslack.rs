@@ -5,8 +5,10 @@ use termion::raw::IntoRawMode;
 use termion::screen::IntoAlternateScreen;
 
 use rslack::config::{Config, SLACK_URL};
-use rslack::console::{print_messages, ChannelSelector, Editor, EditorResult, SelectionResult};
-use rslack::option::{Opt, DEFAULT_MESSAGE_LIMIT};
+use rslack::console::{
+    print_message_table, print_messages, ChannelSelector, Editor, EditorResult, SelectionResult,
+};
+use rslack::option::{MessageFormat, Opt, DEFAULT_MESSAGE_LIMIT};
 use rslack::slack;
 
 #[tokio::main]
@@ -23,6 +25,7 @@ async fn run() -> Result<()> {
     let read_mode = opts.read;
     let limit = opts.limit.unwrap_or(DEFAULT_MESSAGE_LIMIT);
     let image = opts.image;
+    let format = opts.format;
 
     if let Some(path) = &image {
         if !path.is_file() {
@@ -69,9 +72,26 @@ async fn run() -> Result<()> {
 
     // Read mode: fetch and display messages
     if read_mode {
-        let messages = slack_client.get_messages(&channel_info.id, limit).await?;
+        let mut messages = slack_client.get_messages(&channel_info.id, limit).await?;
+        if let Err(err) = slack_client
+            .resolve_user_names(&mut messages.messages)
+            .await
+        {
+            let hint = if err.to_string() == "missing_scope" {
+                " (add the users:read scope to your Slack app and reinstall it)"
+            } else {
+                ""
+            };
+            eprintln!(
+                "[Warning] Showing user IDs; failed to get user names: {}{}",
+                err, hint
+            );
+        }
 
-        print_messages(&channel, &messages.messages);
+        match format {
+            MessageFormat::Text => print_messages(&channel, &messages.messages),
+            MessageFormat::Table => print_message_table(&channel, &messages.messages),
+        }
         return Ok(());
     }
 

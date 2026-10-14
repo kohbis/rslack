@@ -2,11 +2,12 @@ use std::io::Write;
 
 use termion::color;
 use termion::terminal_size;
-use unicode_width::UnicodeWidthStr;
+use unicode_width::{UnicodeWidthChar, UnicodeWidthStr};
 
 const BAR: &str = "|";
 const WHITESPACE: &str = " ";
 const HYPHEN: &str = "-";
+const CORNER: &str = "+";
 const USAGE_TABLE: &str = "Select by ← ↓ ↑ → or h j k l, and Enter.";
 
 pub struct Table {
@@ -15,14 +16,61 @@ pub struct Table {
     max_col_size: usize,
 }
 
-pub(crate) fn horizontal_rule(size: usize) -> String {
-    HYPHEN.repeat(size)
+/// Horizontal border for columns of the given widths, e.g. "+---+-----+"
+pub(crate) fn border(widths: &[usize]) -> String {
+    let rules: Vec<String> = widths.iter().map(|width| HYPHEN.repeat(*width)).collect();
+    format!("{}{}{}", CORNER, rules.join(CORNER), CORNER)
+}
+
+/// Split a line into pieces of at most `width` display columns
+pub(crate) fn wrap(line: &str, width: usize) -> Vec<String> {
+    let mut pieces = vec![];
+    let mut piece = String::new();
+    let mut piece_width = 0;
+    for c in line.replace('\t', "    ").chars() {
+        // Skip control characters, which have no width and break the alignment
+        let Some(char_width) = c.width() else {
+            continue;
+        };
+        if piece_width + char_width > width {
+            pieces.push(std::mem::take(&mut piece));
+            piece_width = 0;
+        }
+        piece.push(c);
+        piece_width += char_width;
+    }
+    pieces.push(piece);
+    pieces
+}
+
+/// Cut `text` to `width` display columns, marking the cut with "…"
+pub(crate) fn truncate(text: &str, width: usize) -> String {
+    if text.width() <= width {
+        return text.to_string();
+    }
+    let mut truncated = String::new();
+    let mut truncated_width = 0;
+    for c in text.chars() {
+        let char_width = c.width().unwrap_or(0);
+        if truncated_width + char_width > width - 1 {
+            break;
+        }
+        truncated.push(c);
+        truncated_width += char_width;
+    }
+    truncated.push('…');
+    truncated
+}
+
+/// Pad `text` with spaces to `width` display columns
+pub(crate) fn pad(text: &str, width: usize) -> String {
+    format!("{}{}", text, " ".repeat(width.saturating_sub(text.width())))
 }
 
 /*
  * Get terminal window size.
  */
-fn term_size() -> (u16, u16) {
+pub(crate) fn term_size() -> (u16, u16) {
     match terminal_size() {
         Ok((width, height)) => (width, height),
         _ => (100, 100),
@@ -61,50 +109,46 @@ impl Table {
         )
         .unwrap();
 
-        let rows: Vec<(usize, Vec<String>)> = self
+        let rows: Vec<Vec<String>> = self
             .chunked_data()
             .iter()
             .map(|names| {
-                (
-                    names.len() * (self.max_col_size + 2) - 1,
-                    names
-                        .into_iter()
-                        .map(|cell| {
-                            // Highlight selected channel
-                            let (fg_color, bg_color) = if cell == selected {
-                                (
-                                    color::Fg(color::Black).to_string(),
-                                    color::Bg(color::White).to_string(),
-                                )
-                            } else {
-                                (
-                                    color::Fg(color::Reset).to_string(),
-                                    color::Bg(color::Reset).to_string(),
-                                )
-                            };
-
-                            format!(
-                                "{}{}{}{}{}{}{}",
-                                bg_color,
-                                WHITESPACE,
-                                fg_color,
-                                cell,
-                                color::Fg(color::Reset),
-                                &WHITESPACE.repeat(
-                                    self.max_col_size - UnicodeWidthStr::width(cell.as_str())
-                                ),
-                                color::Bg(color::Reset),
+                names
+                    .into_iter()
+                    .map(|cell| {
+                        // Highlight selected channel
+                        let (fg_color, bg_color) = if cell == selected {
+                            (
+                                color::Fg(color::Black).to_string(),
+                                color::Bg(color::White).to_string(),
                             )
-                        })
-                        .collect::<Vec<_>>(),
-                )
+                        } else {
+                            (
+                                color::Fg(color::Reset).to_string(),
+                                color::Bg(color::Reset).to_string(),
+                            )
+                        };
+
+                        format!(
+                            "{}{}{}{}{}{}",
+                            bg_color,
+                            WHITESPACE,
+                            fg_color,
+                            pad(cell, self.max_col_size),
+                            color::Fg(color::Reset),
+                            color::Bg(color::Reset),
+                        )
+                    })
+                    .collect::<Vec<_>>()
             })
             .collect();
 
-        self.print_head_channels(stdout, rows[0].0);
-        for row in rows {
-            Self::print_row(stdout, &row.1.join(BAR));
-            Self::print_row(stdout, &horizontal_rule(row.0));
+        // Each cell is a leading space and the padded channel name
+        let row_border = |row: &Vec<String>| border(&vec![self.max_col_size + 1; row.len()]);
+        self.print_head_channels(stdout, &row_border(&rows[0]));
+        for row in &rows {
+            Self::print_row(stdout, &row.join(BAR));
+            Self::print_line(stdout, &row_border(row));
         }
         write!(stdout, "{}", USAGE_TABLE).unwrap();
         stdout.flush().unwrap()
@@ -114,13 +158,18 @@ impl Table {
      * Print table row with bar.
      */
     fn print_row(stdout: &mut dyn Write, content: &str) {
-        write!(stdout, "{}{}{}{}", BAR, content, BAR, "\r\n").unwrap();
+        Self::print_line(stdout, &format!("{}{}{}", BAR, content, BAR));
+    }
+
+    fn print_line(stdout: &mut dyn Write, line: &str) {
+        write!(stdout, "{}{}", line, "\r\n").unwrap();
     }
 
     /*
-     * Print table header.
+     * Print table header, followed by `first_row_border`.
      */
-    fn print_head_channels(&self, stdout: &mut dyn Write, size: usize) {
+    fn print_head_channels(&self, stdout: &mut dyn Write, first_row_border: &str) {
+        let size = first_row_border.len() - 2;
         let margin = size - self.name.len();
         let margin_left = margin / 2;
         let margin_right = if margin % 2 == 0 {
@@ -129,7 +178,6 @@ impl Table {
             margin_left + 1
         };
 
-        let horizontal_rule = horizontal_rule(size);
         let head = [
             &WHITESPACE.repeat(margin_left),
             self.name.as_str(),
@@ -137,9 +185,9 @@ impl Table {
         ]
         .concat();
 
-        Self::print_row(stdout, &horizontal_rule);
+        Self::print_line(stdout, &border(&[size]));
         Self::print_row(stdout, &head);
-        Self::print_row(stdout, &horizontal_rule);
+        Self::print_line(stdout, first_row_border);
     }
 }
 
@@ -162,10 +210,59 @@ mod tests {
     }
 
     #[test]
-    fn horizontal_rule_with_size() {
-        let size = 5;
-        let actual = horizontal_rule(size);
-        let expected = "-----".to_string();
-        assert_eq!(actual, expected)
+    fn wrap_by_display_width() {
+        assert_eq!(wrap("abcdef", 3), ["abc", "def"]);
+        assert_eq!(wrap("あいう", 4), ["あい", "う"]);
+        assert_eq!(wrap("", 3), [""]);
+        assert_eq!(wrap("a\tb", 3), ["a  ", "  b"]);
+    }
+
+    #[test]
+    fn truncate_by_display_width() {
+        assert_eq!(truncate("alice", 5), "alice");
+        assert_eq!(truncate("alice.smith", 5), "alic…");
+        assert_eq!(truncate("あいうえお", 5), "あい…");
+    }
+
+    #[test]
+    fn pad_by_display_width() {
+        assert_eq!(pad("ab", 4), "ab  ");
+        assert_eq!(pad("あ", 4), "あ  ");
+        assert_eq!(pad("abcde", 4), "abcde");
+    }
+
+    #[test]
+    fn border_with_widths() {
+        assert_eq!(border(&[5]), "+-----+");
+        assert_eq!(border(&[2, 3]), "+--+---+");
+    }
+
+    #[test]
+    fn draw_channels_with_borders() {
+        let data = ["a", "bb", "ccc"].map(String::from).to_vec();
+        let table = Table::new("CH".to_string(), data, 3);
+        let mut out = vec![];
+        table.draw(&mut out, "bb");
+        let out = String::from_utf8(out).unwrap();
+        // Strip the escape sequences for clearing the screen and colors
+        let plain: String = out
+            .split('\x1b')
+            .map(|part| match part.find(|c: char| c.is_ascii_alphabetic()) {
+                Some(i) if part.starts_with('[') => &part[i + 1..],
+                _ => part,
+            })
+            .collect();
+        assert_eq!(
+            plain,
+            [
+                "+--------------+",
+                "|      CH      |",
+                "+----+----+----+",
+                "| a  | bb | ccc|",
+                "+----+----+----+",
+                USAGE_TABLE,
+            ]
+            .join("\r\n")
+        );
     }
 }
