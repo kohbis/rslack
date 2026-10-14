@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use anyhow::{anyhow, Result};
-use reqwest::Client;
+use reqwest::{Client, RequestBuilder};
 use serde::Deserialize;
 use url::Url;
 
@@ -118,6 +118,26 @@ pub struct SlackClient {
     pub bearer_token: String,
 }
 
+/// Error returned by the Slack API in `"error"` of an `"ok": false` response,
+/// e.g. `missing_scope` or `user_not_found`
+#[derive(Debug)]
+pub struct SlackApiError(pub String);
+
+impl std::fmt::Display for SlackApiError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl std::error::Error for SlackApiError {}
+
+impl SlackApiError {
+    /// Whether `err` is a Slack API error with the given code
+    pub fn is(err: &anyhow::Error, code: &str) -> bool {
+        err.downcast_ref::<Self>().is_some_and(|e| e.0 == code)
+    }
+}
+
 impl SlackClient {
     pub fn new(config: &Config, base_url: &str) -> Self {
         Self {
@@ -131,30 +151,10 @@ impl SlackClient {
      * Get slack channels.
      */
     pub async fn get_channels(&self) -> Result<SlackChannels> {
-        let url = Url::parse(&format!("{}{}", self.base_url, "/api/conversations.list"))
-            .map_err(|e| anyhow!("Invalid URL: {}", e))?;
-
-        let res: SlackResponse = self
-            .client
-            .get(url)
-            .bearer_auth(&self.bearer_token)
-            .send()
-            .await?
-            .json()
-            .await?;
-
-        if res.ok {
-            match res.channels {
-                Some(channels) => Ok(SlackChannels::from(channels)),
-                None => {
-                    return Err(anyhow!("No channels found"));
-                }
-            }
-        } else {
-            Err(anyhow!(
-                "{}",
-                res.error.unwrap_or_else(|| "Unknown error".to_string())
-            ))
+        let res = self.get("conversations.list", &[]).await?;
+        match res.channels {
+            Some(channels) => Ok(SlackChannels::from(channels)),
+            None => Err(anyhow!("No channels found")),
         }
     }
 
@@ -162,80 +162,33 @@ impl SlackClient {
      * Post slack message.
      */
     pub async fn post_message(&self, channel: &str, text: &str) -> Result<SlackResponse> {
-        let body = vec![("channel", channel), ("text", text)];
-        let url = Url::parse(&format!("{}{}", self.base_url, "/api/chat.postMessage"))
-            .map_err(|e| anyhow!("Invalid URL: {}", e))?;
-
-        let client = self
-            .client
-            .post(url)
-            .bearer_auth(&self.bearer_token)
-            .form(&body);
-
-        let res: SlackResponse = client.send().await?.json().await?;
-
-        if res.ok {
-            Ok(res)
-        } else {
-            Err(anyhow!(
-                "{}",
-                res.error.unwrap_or_else(|| "Unknown error".to_string())
-            ))
-        }
+        self.post("chat.postMessage", &[("channel", channel), ("text", text)])
+            .await
     }
 
     /*
      * Get channel messages (conversations.history).
      */
     pub async fn get_messages(&self, channel_id: &str, limit: usize) -> Result<SlackMessages> {
-        let url = Url::parse(&format!(
-            "{}{}?channel={}&limit={}",
-            self.base_url, "/api/conversations.history", channel_id, limit
-        ))
-        .map_err(|e| anyhow!("Invalid URL: {}", e))?;
-
-        let res: SlackResponse = self
-            .client
-            .get(url)
-            .bearer_auth(&self.bearer_token)
-            .send()
-            .await?
-            .json()
+        let limit = limit.to_string();
+        let res = self
+            .get(
+                "conversations.history",
+                &[("channel", channel_id), ("limit", &limit)],
+            )
             .await?;
-
-        if res.ok {
-            match res.messages {
-                Some(messages) => Ok(SlackMessages::from(messages)),
-                None => Err(anyhow!("No messages found")),
-            }
-        } else {
-            Err(anyhow!(
-                "{}",
-                res.error.unwrap_or_else(|| "Unknown error".to_string())
-            ))
+        match res.messages {
+            Some(messages) => Ok(SlackMessages::from(messages)),
+            None => Err(anyhow!("No messages found")),
         }
     }
-}
 
-impl SlackClient {
     /*
      * Get a user's display name (users.info).
      */
     pub async fn get_user_name(&self, user_id: &str) -> Result<String> {
-        let mut url = Url::parse(&format!("{}{}", self.base_url, "/api/users.info"))
-            .map_err(|e| anyhow!("Invalid URL: {}", e))?;
-        url.query_pairs_mut().append_pair("user", user_id);
-
-        let res: SlackResponse = self
-            .client
-            .get(url)
-            .bearer_auth(&self.bearer_token)
-            .send()
-            .await?
-            .json()
-            .await?;
-
-        match Self::check(res)?.user {
+        let res = self.get("users.info", &[("user", user_id)]).await?;
+        match res.user {
             Some(user) => Ok(user.display_name().to_string()),
             None => Err(anyhow!("No user found")),
         }
@@ -265,7 +218,7 @@ impl SlackClient {
                     names.insert(user_id, name);
                 }
                 // e.g. users of another workspace via Slack Connect: keep showing the ID
-                Err(err) if err.to_string() == "user_not_found" => {}
+                Err(err) if SlackApiError::is(&err, "user_not_found") => {}
                 Err(err) => return Err(err),
             }
         }
@@ -299,23 +252,12 @@ impl SlackClient {
 
         // 1. Get an upload URL
         let length = bytes.len().to_string();
-        let body = vec![("filename", filename), ("length", length.as_str())];
-        let url = Url::parse(&format!(
-            "{}{}",
-            self.base_url, "/api/files.getUploadURLExternal"
-        ))
-        .map_err(|e| anyhow!("Invalid URL: {}", e))?;
-
-        let res: SlackResponse = self
-            .client
-            .post(url)
-            .bearer_auth(&self.bearer_token)
-            .form(&body)
-            .send()
-            .await?
-            .json()
+        let res = self
+            .post(
+                "files.getUploadURLExternal",
+                &[("filename", filename), ("length", &length)],
+            )
             .await?;
-        let res = Self::check(res)?;
         let (upload_url, file_id) = match (res.upload_url, res.file_id) {
             (Some(upload_url), Some(file_id)) => (upload_url, file_id),
             _ => return Err(anyhow!("No upload URL returned")),
@@ -335,33 +277,42 @@ impl SlackClient {
         if let Some(comment) = comment.filter(|c| !c.trim().is_empty()) {
             body.push(("initial_comment", comment));
         }
-        let url = Url::parse(&format!(
-            "{}{}",
-            self.base_url, "/api/files.completeUploadExternal"
-        ))
-        .map_err(|e| anyhow!("Invalid URL: {}", e))?;
+        self.post("files.completeUploadExternal", &body).await
+    }
 
-        let res: SlackResponse = self
-            .client
-            .post(url)
+    /// Call a Web API method with GET and the given query parameters
+    async fn get(&self, method: &str, query: &[(&str, &str)]) -> Result<SlackResponse> {
+        let mut url = self.method_url(method)?;
+        if !query.is_empty() {
+            url.query_pairs_mut().extend_pairs(query);
+        }
+        self.send(self.client.get(url)).await
+    }
+
+    /// Call a Web API method with POST and the given form parameters
+    async fn post(&self, method: &str, form: &[(&str, &str)]) -> Result<SlackResponse> {
+        let request = self.client.post(self.method_url(method)?).form(form);
+        self.send(request).await
+    }
+
+    fn method_url(&self, method: &str) -> Result<Url> {
+        Url::parse(&format!("{}/api/{}", self.base_url, method))
+            .map_err(|e| anyhow!("Invalid URL: {}", e))
+    }
+
+    /// Send an authorized request, turning an `"ok": false` response into `SlackApiError`
+    async fn send(&self, request: RequestBuilder) -> Result<SlackResponse> {
+        let res: SlackResponse = request
             .bearer_auth(&self.bearer_token)
-            .form(&body)
             .send()
             .await?
             .json()
             .await?;
-
-        Self::check(res)
-    }
-
-    fn check(res: SlackResponse) -> Result<SlackResponse> {
         if res.ok {
             Ok(res)
         } else {
-            Err(anyhow!(
-                "{}",
-                res.error.unwrap_or_else(|| "Unknown error".to_string())
-            ))
+            let code = res.error.unwrap_or_else(|| "Unknown error".to_string());
+            Err(SlackApiError(code).into())
         }
     }
 }
@@ -664,8 +615,12 @@ mod tests {
         let config = Config::new(None).unwrap();
         let slack_client = SlackClient::new(&config, &server.url());
         let mut messages = vec![message_from(Some("U0123456789"))];
-        let result = slack_client.resolve_user_names(&mut messages).await;
-        assert_eq!(result.err().unwrap().to_string(), "missing_scope");
+        let err = slack_client
+            .resolve_user_names(&mut messages)
+            .await
+            .unwrap_err();
+        assert!(SlackApiError::is(&err, "missing_scope"));
+        assert!(!SlackApiError::is(&err, "user_not_found"));
         assert_eq!(messages[0].author(), "U0123456789");
     }
 
