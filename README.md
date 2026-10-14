@@ -99,8 +99,10 @@ This will:
 
 ### Message Editor
 
-- Type your message (supports multi-line messages)
-- Move cursor: Up/Down arrow keys
+- Type your message at the cursor (supports multi-line messages; `Enter` splits the line)
+- Move cursor: arrow keys
+- Jump to start/end of line: `Home`/`End` or `Ctrl+a`/`Ctrl+e`
+- Delete: `Backspace` (before the cursor) or `Delete` (at the cursor); at a line edge they join lines
 - Post message: `Ctrl+p`
 - Exit without posting: `Ctrl+c`
 
