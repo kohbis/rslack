@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.6.0](https://github.com/kohbis/rslack/compare/v0.5.12...v0.6.0) (2026-10-14)
+
+
+### ⚠ BREAKING CHANGES
+
+* ~/.rslack is no longer read. Move it to ~/.config/rslack/config. RSLACK_TOKEN now takes precedence over the config file.
+
+### Features
+
+* read config from $XDG_CONFIG_HOME/rslack/config ([#631](https://github.com/kohbis/rslack/issues/631)) ([ce03da6](https://github.com/kohbis/rslack/commit/ce03da6b76c31fabca8f916fec141fae2d5bb21c))
+
 ## [0.5.12](https://github.com/kohbis/rslack/compare/v0.5.11...v0.5.12) (2026-10-14)
 
 
