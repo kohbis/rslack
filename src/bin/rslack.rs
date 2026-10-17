@@ -51,14 +51,35 @@ async fn run() -> Result<()> {
 
     let config = Config::new(None)?;
     let slack_client = slack::SlackClient::new(&config, SLACK_URL);
-    let channels = slack_client.get_channels().await?;
+    let mut channels = slack_client.get_channels().await?;
+    if !channels.unavailable.is_empty() {
+        eprintln!(
+            "[Warning] Not listing {}: the token is missing the scope",
+            channels.unavailable.join(", ")
+        );
+    }
+    if let Err(err) = slack_client
+        .resolve_direct_message_names(&mut channels.channels)
+        .await
+    {
+        let hint = if slack::SlackApiError::is(&err, "missing_scope") {
+            " (add the users:read scope to your Slack app and reinstall it)"
+        } else {
+            ""
+        };
+        eprintln!(
+            "[Warning] Showing user IDs for direct messages; failed to get user names: {}{}",
+            err, hint
+        );
+    }
+    channels.disambiguate_labels();
 
     let channel_names = channels.channel_names();
     let max_col_size = channels.max_channel_size() + 1;
     let selector = ChannelSelector::new(channel_names.clone(), max_col_size);
 
-    // Switch to the interactive screen only when something has to be selected or typed
-    let needs_selection = selector.needs_selection(&channel);
+    // An id or `@name` counts even when it is not the label drawn in the selector
+    let needs_selection = channel.trim().is_empty() || channels.find_by_name(&channel).is_none();
     if needs_selection && !interactive {
         if channel.trim().is_empty() {
             bail!("Specify a channel with -c when stdin is not a terminal");

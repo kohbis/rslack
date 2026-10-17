@@ -8,7 +8,7 @@
 
 ## Features
 
-- Interactive channel selection with vim-like navigation (h,j,k,l or arrow keys)
+- Interactive channel selection with vim-like navigation (h,j,k,l or arrow keys), including private channels and direct messages the token can see
 - Multi-line message editor with cursor movement
 - **Read messages from channels** (latest N messages, default: 10)
 - **Upload images to channels** (with an optional comment)
@@ -48,6 +48,10 @@ cargo build --release
    - `chat:write` - To post messages to channels
    - `files:write` - To upload images to channels
    - `users:read` - To show user names when reading messages (user IDs are shown without it)
+   - `groups:read` - To list private channels (public channels still list without it)
+   - `im:read` - To list direct messages
+   - `mpim:read` - To list group direct messages
+   - `groups:history`, `im:history`, `mpim:history` - To read those conversations
 3. Click **Install App to Workspace**
 4. Copy the **OAuth Access Token** from the **OAuth Tokens & Redirect URLs** section
 
@@ -135,7 +139,7 @@ rslack -c general -i ./screenshot.png -m "Look at this"
 ```
 
 Options:
-- `-c, --channel <CHANNEL>`: Specify the channel
+- `-c, --channel <CHANNEL>`: Channel name, channel id, a direct message (`@alice` or the other user's id), or a group direct message (`@alice, @bob`). Two direct messages with the same display name are shown as `@alice (D123)`
 - `-m, --message <MESSAGE>`: Specify the message to post (when omitted and stdin is piped, the message is read from stdin)
 - `-r, --read`: Read messages from channel instead of posting
 - `-l, --limit <LIMIT>`: Number of messages to fetch (default: 10)
