@@ -9,9 +9,22 @@ const MAX_USER_WIDTH: usize = 20;
 /// Narrowest the MESSAGE column gets, even on a narrow terminal
 const MIN_TEXT_WIDTH: usize = 20;
 
+/// `#general` for a channel. A direct-message label already starts with `@`.
+pub fn channel_heading(name: &str) -> String {
+    if name.starts_with('@') {
+        name.to_string()
+    } else {
+        format!("#{name}")
+    }
+}
+
 /// Print messages to stdout (non-interactive, simple format)
 pub fn print_messages(channel_name: &str, messages: &[SlackMessage]) {
-    println!("#{} - Latest {} messages", channel_name, messages.len());
+    println!(
+        "{} - Latest {} messages",
+        channel_heading(channel_name),
+        messages.len()
+    );
     println!("{}", "─".repeat(60));
 
     for message in messages.iter().rev() {
@@ -28,7 +41,11 @@ pub fn print_messages(channel_name: &str, messages: &[SlackMessage]) {
 
 /// Print messages to stdout as a table (non-interactive)
 pub fn print_message_table(channel_name: &str, messages: &[SlackMessage]) {
-    println!("#{} - Latest {} messages", channel_name, messages.len());
+    println!(
+        "{} - Latest {} messages",
+        channel_heading(channel_name),
+        messages.len()
+    );
     for line in message_table(messages, term_size().0 as usize) {
         println!("{}", line);
     }
@@ -143,6 +160,13 @@ mod tests {
                 "[file] (hidden)",
             ]
         );
+    }
+
+    #[test]
+    fn channel_heading_keeps_a_direct_message_label() {
+        assert_eq!(channel_heading("general"), "#general");
+        assert_eq!(channel_heading("@alice"), "@alice");
+        assert_eq!(channel_heading("@alice (D1)"), "@alice (D1)");
     }
 
     #[test]

@@ -7,7 +7,8 @@ use termion::screen::IntoAlternateScreen;
 
 use rslack::config::{Config, SLACK_URL};
 use rslack::console::{
-    print_message_table, print_messages, ChannelSelector, Editor, EditorResult, SelectionResult,
+    channel_heading, print_message_table, print_messages, ChannelSelector, Editor, EditorResult,
+    SelectionResult,
 };
 use rslack::option::{read_message, MessageFormat, Opt, DEFAULT_MESSAGE_LIMIT};
 use rslack::slack;
@@ -51,14 +52,38 @@ async fn run() -> Result<()> {
 
     let config = Config::new(None)?;
     let slack_client = slack::SlackClient::new(&config, SLACK_URL);
-    let channels = slack_client.get_channels().await?;
+    let mut channels = slack_client.get_channels().await?;
+    if !channels.unavailable.is_empty() {
+        let kinds = channels
+            .unavailable
+            .iter()
+            .map(|kind| slack::conversation_type_label(kind))
+            .collect::<Vec<_>>()
+            .join(", ");
+        eprintln!("[Warning] Not listing {kinds}: the token is missing the scope");
+    }
+    if let Err(err) = slack_client
+        .resolve_direct_message_names(&mut channels.channels)
+        .await
+    {
+        let hint = if slack::SlackApiError::is(&err, "missing_scope") {
+            " (add the users:read scope to your Slack app and reinstall it)"
+        } else {
+            ""
+        };
+        eprintln!(
+            "[Warning] Showing user IDs for direct messages; failed to get user names: {}{}",
+            err, hint
+        );
+    }
+    channels.disambiguate_labels();
 
     let channel_names = channels.channel_names();
     let max_col_size = channels.max_channel_size() + 1;
     let selector = ChannelSelector::new(channel_names.clone(), max_col_size);
 
-    // Switch to the interactive screen only when something has to be selected or typed
-    let needs_selection = selector.needs_selection(&channel);
+    // An id or `@name` counts even when it is not the label drawn in the selector
+    let needs_selection = channel.trim().is_empty() || channels.find_by_name(&channel).is_none();
     if needs_selection && !interactive {
         if channel.trim().is_empty() {
             bail!("Specify a channel with -c when stdin is not a terminal");
@@ -122,14 +147,19 @@ async fn run() -> Result<()> {
         slack_client
             .upload_file(&channel_info.id, path, Some(&message))
             .await?;
-        println!("[Success] #{}\n {}\n {}", channel, path.display(), message);
+        println!(
+            "[Success] {}\n {}\n {}",
+            channel_heading(&channel),
+            path.display(),
+            message
+        );
         return Ok(());
     }
 
     slack_client
         .post_message(&channel_info.id, &message)
         .await?;
-    println!("[Success] #{}\n {}", channel, message);
+    println!("[Success] {}\n {}", channel_heading(&channel), message);
 
     Ok(())
 }

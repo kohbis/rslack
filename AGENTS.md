@@ -77,7 +77,7 @@ Tests are unit tests inside each module. Slack API calls are mocked with `mockit
 ## Slack API Integration
 
 - Uses Slack Web API
-- Requires User Token Scopes: `channels:read`, `channels:history`, `chat:write`, `files:write`, `users:read`
+- Requires User Token Scopes: `channels:read`, `channels:history`, `chat:write`, `files:write`, `users:read`. Private channels and direct messages also need `groups:read`, `im:read`, `mpim:read`, and the matching `*:history` scopes to read them. A token without those still lists public channels.
 - Token is configured via `RSLACK_TOKEN` env var (takes precedence) or `$XDG_CONFIG_HOME/rslack/config` (default `~/.config/rslack/config`)
 
 ## Common Tasks

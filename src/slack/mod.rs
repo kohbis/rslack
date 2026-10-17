@@ -30,20 +30,99 @@ pub struct ResponseMetadata {
 /// Channels fetched per conversations.list call (Slack recommends at most 200)
 const CHANNELS_PER_PAGE: &str = "200";
 
+/// Public channels, private channels, group DMs, and direct messages
+const CONVERSATION_TYPES: &str = "public_channel,private_channel,mpim,im";
+
+/// Name of a `conversations.list` type for a warning.
+pub fn conversation_type_label(kind: &str) -> &str {
+    match kind {
+        "public_channel" => "public channels",
+        "private_channel" => "private channels",
+        "mpim" => "group direct messages",
+        "im" => "direct messages",
+        other => other,
+    }
+}
+
 pub struct SlackChannels {
     pub channels: Vec<SlackChannel>,
+    /// Conversation types left out because the token lacks the scope
+    pub unavailable: Vec<&'static str>,
 }
 
 impl From<Vec<SlackChannel>> for SlackChannels {
     fn from(channels: Vec<SlackChannel>) -> Self {
-        Self { channels }
+        Self {
+            channels,
+            unavailable: vec![],
+        }
     }
 }
 
-#[derive(Clone, Deserialize)]
+#[derive(Clone, Default, Deserialize)]
 pub struct SlackChannel {
     pub id: String,
+    #[serde(default)]
     pub name: String,
+    #[serde(default)]
+    pub is_im: bool,
+    #[serde(default)]
+    pub is_mpim: bool,
+    /// The other user, set on a direct message
+    #[serde(default)]
+    pub user: Option<String>,
+    /// `@name` filled in by `SlackClient::resolve_direct_message_names`
+    #[serde(skip)]
+    pub display_name: Option<String>,
+}
+
+impl SlackChannel {
+    /// Name shown in the selector and accepted by `-c`
+    pub fn label(&self) -> String {
+        if let Some(name) = self.display_name.as_deref().filter(|name| !name.is_empty()) {
+            return name.to_string();
+        }
+        if self.is_im {
+            return format!("@{}", self.user.as_deref().unwrap_or(self.id.as_str()));
+        }
+        if self.is_mpim {
+            return mpim_label(&self.name);
+        }
+        if self.name.is_empty() {
+            self.id.clone()
+        } else {
+            self.name.clone()
+        }
+    }
+}
+
+/// `mpdm-alice--bob--carol-1` -> `@alice, @bob, @carol`
+fn mpim_label(name: &str) -> String {
+    let Some(rest) = name.strip_prefix("mpdm-") else {
+        return if name.is_empty() {
+            "group dm".to_string()
+        } else {
+            name.to_string()
+        };
+    };
+    let names = match rest.rsplit_once('-') {
+        Some((names, suffix))
+            if !suffix.is_empty() && suffix.chars().all(|c| c.is_ascii_digit()) =>
+        {
+            names
+        }
+        _ => rest,
+    };
+    let people: Vec<String> = names
+        .split("--")
+        .filter(|part| !part.is_empty())
+        .map(|part| format!("@{part}"))
+        .collect();
+    if people.is_empty() {
+        name.to_string()
+    } else {
+        people.join(", ")
+    }
 }
 
 #[derive(Clone, Deserialize)]
@@ -159,13 +238,63 @@ impl SlackClient {
     }
 
     /*
-     * Get unarchived slack channels, following pagination.
+     * Get unarchived conversations the token can see: public channels, private
+     * channels, group DMs, and direct messages.
+     * A token missing one of those scopes gets `missing_scope` for the combined
+     * request, so fall back to asking for each type on its own.
      */
     pub async fn get_channels(&self) -> Result<SlackChannels> {
+        match self.list_channels(CONVERSATION_TYPES).await {
+            Ok(channels) => {
+                if channels.is_empty() {
+                    return Err(anyhow!("No channels found"));
+                }
+                Ok(SlackChannels {
+                    channels,
+                    unavailable: vec![],
+                })
+            }
+            Err(err) if SlackApiError::is(&err, "missing_scope") => {
+                self.list_channels_by_type().await
+            }
+            Err(err) => Err(err),
+        }
+    }
+
+    async fn list_channels_by_type(&self) -> Result<SlackChannels> {
+        const TYPES: &[&str] = &["public_channel", "private_channel", "mpim", "im"];
+        let mut channels = vec![];
+        let mut unavailable = vec![];
+        for conversation_type in TYPES {
+            match self.list_channels(conversation_type).await {
+                Ok(mut found) => channels.append(&mut found),
+                Err(err) if SlackApiError::is(&err, "missing_scope") => {
+                    unavailable.push(*conversation_type);
+                }
+                Err(err) => return Err(err),
+            }
+        }
+        if channels.is_empty() {
+            if unavailable.len() == TYPES.len() {
+                return Err(SlackApiError("missing_scope".into()).into());
+            }
+            return Err(anyhow!("No channels found"));
+        }
+        Ok(SlackChannels {
+            channels,
+            unavailable,
+        })
+    }
+
+    async fn list_channels(&self, types: &str) -> Result<Vec<SlackChannel>> {
         let mut channels = vec![];
         let mut cursor: Option<String> = None;
         loop {
-            let mut query = vec![("exclude_archived", "true"), ("limit", CHANNELS_PER_PAGE)];
+            let mut query = vec![
+                ("exclude_archived", "true"),
+                ("limit", CHANNELS_PER_PAGE),
+                ("types", types),
+            ];
             if let Some(cursor) = &cursor {
                 query.push(("cursor", cursor));
             }
@@ -180,11 +309,37 @@ impl SlackClient {
                 break;
             }
         }
+        Ok(channels)
+    }
 
-        if channels.is_empty() {
-            return Err(anyhow!("No channels found"));
+    /*
+     * Fill in `@name` for direct messages, looking up each user only once.
+     */
+    pub async fn resolve_direct_message_names(&self, channels: &mut [SlackChannel]) -> Result<()> {
+        let mut names: HashMap<String, String> = HashMap::new();
+        for channel in channels.iter().filter(|channel| channel.is_im) {
+            let Some(user_id) = &channel.user else {
+                continue;
+            };
+            if names.contains_key(user_id) {
+                continue;
+            }
+            match self.get_user_name(user_id).await {
+                Ok(name) => {
+                    names.insert(user_id.clone(), name);
+                }
+                Err(err) if SlackApiError::is(&err, "user_not_found") => {}
+                Err(err) => return Err(err),
+            }
         }
-        Ok(SlackChannels::from(channels))
+        for channel in channels.iter_mut().filter(|channel| channel.is_im) {
+            if let Some(user_id) = &channel.user {
+                if let Some(name) = names.get(user_id) {
+                    channel.display_name = Some(format!("@{name}"));
+                }
+            }
+        }
+        Ok(())
     }
 
     /*
@@ -374,7 +529,7 @@ impl SlackChannels {
     pub fn channel_names(&self) -> Vec<String> {
         self.channels
             .iter()
-            .map(|channel| channel.name.clone())
+            .map(|channel| channel.label())
             .collect()
     }
 
@@ -382,13 +537,45 @@ impl SlackChannels {
     pub fn max_channel_size(&self) -> usize {
         self.channels
             .iter()
-            .map(|channel| channel.name.width())
+            .map(|channel| channel.label().width())
             .max()
             .unwrap_or(0)
     }
 
+    /// Match a channel name, a direct-message label (`@alice`), a channel id, or the other user's id.
+    /// Two conversations that both match is ambiguous, so this returns none.
     pub fn find_by_name(&self, name: &str) -> Option<&SlackChannel> {
-        self.channels.iter().find(|c| c.name == name)
+        let name = name.trim();
+        let mut found = None;
+        for channel in &self.channels {
+            let matches = channel.label() == name
+                || channel.name == name
+                || channel.id == name
+                || channel.user.as_deref() == Some(name);
+            if !matches {
+                continue;
+            }
+            if found.is_some() {
+                return None;
+            }
+            found = Some(channel);
+        }
+        found
+    }
+
+    /// When two conversations share a label, append the channel id so a choice cannot hit the wrong one
+    pub fn disambiguate_labels(&mut self) {
+        let mut counts: HashMap<String, usize> = HashMap::new();
+        for channel in &self.channels {
+            *counts.entry(channel.label()).or_default() += 1;
+        }
+        for channel in &mut self.channels {
+            let label = channel.label();
+            if counts.get(&label).copied().unwrap_or(0) > 1 {
+                let id = channel.id.clone();
+                channel.display_name = Some(format!("{label} ({id})"));
+            }
+        }
     }
 }
 
@@ -415,6 +602,10 @@ mod tests {
             .match_query(mockito::Matcher::AllOf(vec![
                 mockito::Matcher::UrlEncoded("exclude_archived".into(), "true".into()),
                 mockito::Matcher::UrlEncoded("limit".into(), "200".into()),
+                mockito::Matcher::UrlEncoded(
+                    "types".into(),
+                    "public_channel,private_channel,mpim,im".into(),
+                ),
             ]))
             .with_status(200)
             .with_header("content-type", "application/json")
@@ -436,7 +627,8 @@ mod tests {
         let first = server
             .mock("GET", "/api/conversations.list")
             .match_query(mockito::Matcher::Regex(
-                "^exclude_archived=true&limit=200$".into(),
+                "^exclude_archived=true&limit=200&types=public_channel%2Cprivate_channel%2Cmpim%2Cim$"
+                    .into(),
             ))
             .with_status(200)
             .with_header("content-type", "application/json")
@@ -496,19 +688,11 @@ mod tests {
     fn it_get_slack_channnel_names() {
         let channels = vec!["apple", "grape", "orange"];
         let slack_channels = SlackChannels {
+            unavailable: vec![],
             channels: vec![
-                SlackChannel {
-                    id: "ID001".to_string(),
-                    name: "apple".to_string(),
-                },
-                SlackChannel {
-                    id: "ID002".to_string(),
-                    name: "grape".to_string(),
-                },
-                SlackChannel {
-                    id: "ID003".to_string(),
-                    name: "orange".to_string(),
-                },
+                channel("ID001", "apple"),
+                channel("ID002", "grape"),
+                channel("ID003", "orange"),
             ],
         };
         assert_eq!(channels, slack_channels.channel_names());
@@ -517,43 +701,24 @@ mod tests {
     #[test]
     fn it_get_max_channel_size() {
         let slack_channels = SlackChannels {
+            unavailable: vec![],
             channels: vec![
-                SlackChannel {
-                    id: "ID001".to_string(),
-                    name: "apple".to_string(),
-                },
-                SlackChannel {
-                    id: "ID002".to_string(),
-                    name: "grape".to_string(),
-                },
-                SlackChannel {
-                    id: "ID003".to_string(),
-                    name: "orange".to_string(),
-                },
+                channel("ID001", "apple"),
+                channel("ID002", "grape"),
+                channel("ID003", "orange"),
             ],
         };
         assert_eq!(6, slack_channels.max_channel_size());
 
-        let wide = SlackChannels::from(vec![SlackChannel {
-            id: "ID004".to_string(),
-            name: "雑談".to_string(),
-        }]);
+        let wide = SlackChannels::from(vec![channel("ID004", "雑談")]);
         assert_eq!(4, wide.max_channel_size());
     }
 
     #[test]
     fn it_find_by_name() {
         let slack_channels = SlackChannels {
-            channels: vec![
-                SlackChannel {
-                    id: "ID001".to_string(),
-                    name: "apple".to_string(),
-                },
-                SlackChannel {
-                    id: "ID002".to_string(),
-                    name: "grape".to_string(),
-                },
-            ],
+            unavailable: vec![],
+            channels: vec![channel("ID001", "apple"), channel("ID002", "grape")],
         };
         let found = slack_channels.find_by_name("apple");
         assert!(found.is_some());
@@ -561,6 +726,146 @@ mod tests {
 
         let not_found = slack_channels.find_by_name("banana");
         assert!(not_found.is_none());
+    }
+
+    #[test]
+    fn it_conversation_type_label() {
+        assert_eq!(
+            conversation_type_label("private_channel"),
+            "private channels"
+        );
+        assert_eq!(conversation_type_label("im"), "direct messages");
+        assert_eq!(conversation_type_label("mpim"), "group direct messages");
+    }
+
+    #[test]
+    fn it_channel_label() {
+        assert_eq!(channel("C1", "secret").label(), "secret");
+        let mut dm = channel("D1", "");
+        dm.is_im = true;
+        dm.user = Some("U1".to_string());
+        assert_eq!(dm.label(), "@U1");
+        dm.display_name = Some("@alice".to_string());
+        assert_eq!(dm.label(), "@alice");
+        let mut group = channel("G1", "mpdm-alice--bob-smith--carol-1");
+        group.is_mpim = true;
+        assert_eq!(group.label(), "@alice, @bob-smith, @carol");
+        assert_eq!(mpim_label("not-a-group"), "not-a-group");
+    }
+
+    #[test]
+    fn it_find_direct_message() {
+        let mut dm = channel("D1", "");
+        dm.is_im = true;
+        dm.user = Some("U1".to_string());
+        dm.display_name = Some("@alice".to_string());
+        let channels = SlackChannels {
+            unavailable: vec![],
+            channels: vec![channel("C1", "general"), dm],
+        };
+        assert_eq!(channels.find_by_name("@alice").unwrap().id, "D1");
+        assert_eq!(channels.find_by_name("D1").unwrap().id, "D1");
+        assert_eq!(channels.find_by_name("U1").unwrap().id, "D1");
+        assert_eq!(channels.find_by_name("general").unwrap().id, "C1");
+    }
+
+    #[test]
+    fn it_disambiguate_duplicate_labels() {
+        let mut first = channel("D1", "");
+        first.is_im = true;
+        first.display_name = Some("@alice".to_string());
+        let mut second = channel("D2", "");
+        second.is_im = true;
+        second.display_name = Some("@alice".to_string());
+        let mut channels = SlackChannels {
+            unavailable: vec![],
+            channels: vec![first, second],
+        };
+        channels.disambiguate_labels();
+        assert_eq!(
+            channels.channel_names(),
+            ["@alice (D1)".to_string(), "@alice (D2)".to_string()]
+        );
+        assert!(channels.find_by_name("@alice").is_none());
+        assert_eq!(channels.find_by_name("D2").unwrap().id, "D2");
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn it_get_channels_falls_back_when_a_scope_is_missing() {
+        let mut server = mockito::Server::new_async().await;
+        let combined = server
+            .mock("GET", "/api/conversations.list")
+            .match_query(mockito::Matcher::UrlEncoded(
+                "types".into(),
+                "public_channel,private_channel,mpim,im".into(),
+            ))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"ok":false,"error":"missing_scope"}"#)
+            .expect(1)
+            .create_async()
+            .await;
+        let public = server
+            .mock("GET", "/api/conversations.list")
+            .match_query(mockito::Matcher::UrlEncoded(
+                "types".into(),
+                "public_channel".into(),
+            ))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"ok":true,"channels":[{"id":"C1","name":"general"}]}"#)
+            .expect(1)
+            .create_async()
+            .await;
+        let missing = server
+            .mock("GET", "/api/conversations.list")
+            .match_query(mockito::Matcher::Regex(
+                "types=(private_channel|mpim|im)$".into(),
+            ))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"ok":false,"error":"missing_scope"}"#)
+            .expect(3)
+            .create_async()
+            .await;
+
+        std::env::set_var("RSLACK_TOKEN", "test-token");
+        let config = Config::new(None).unwrap();
+        let slack_client = SlackClient::new(&config, &server.url());
+        let channels = slack_client.get_channels().await.unwrap();
+        assert_eq!(channels.channel_names(), ["general"]);
+        assert_eq!(channels.unavailable, ["private_channel", "mpim", "im"]);
+        combined.assert_async().await;
+        public.assert_async().await;
+        missing.assert_async().await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn it_resolve_direct_message_names() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/api/users.info")
+            .match_query(mockito::Matcher::UrlEncoded("user".into(), "U1".into()))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body_from_file("tests/fixtures/slack/users_info/ok.json")
+            .create_async()
+            .await;
+
+        std::env::set_var("RSLACK_TOKEN", "test-token");
+        let config = Config::new(None).unwrap();
+        let slack_client = SlackClient::new(&config, &server.url());
+        let mut dm = channel("D1", "");
+        dm.is_im = true;
+        dm.user = Some("U1".to_string());
+        let mut channels = vec![dm];
+        slack_client
+            .resolve_direct_message_names(&mut channels)
+            .await
+            .unwrap();
+        assert_eq!(channels[0].label(), "@alice.s");
     }
 
     #[tokio::test]
@@ -722,6 +1027,14 @@ mod tests {
         assert!(SlackApiError::is(&err, "missing_scope"));
         assert!(!SlackApiError::is(&err, "user_not_found"));
         assert_eq!(messages[0].author(), "U0123456789");
+    }
+
+    fn channel(id: &str, name: &str) -> SlackChannel {
+        SlackChannel {
+            id: id.to_string(),
+            name: name.to_string(),
+            ..Default::default()
+        }
     }
 
     fn message_from(user: Option<&str>) -> SlackMessage {
