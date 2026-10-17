@@ -8,7 +8,7 @@
 
 ## Features
 
-- Interactive channel selection with vim-like navigation (h,j,k,l or arrow keys), including private channels and direct messages the token can see
+- Interactive channel selection with vim-like navigation (h,j,k,l or arrow keys) and `/` to filter by name, including private channels and direct messages the token can see
 - Multi-line message editor with cursor movement
 - **Read messages from channels** (latest N messages, default: 10)
 - **Upload images to channels** (with an optional comment)
@@ -98,8 +98,9 @@ This will:
 ### Navigation Keys
 
 - Channel selection: Arrow keys or vim-style `h`, `j`, `k`, `l`
+- Filter the list: `/`, then type. Arrows still move, `Backspace` deletes, `Esc` clears
 - Confirm selection: `Enter`
-- Exit: `q` or `Ctrl+c`
+- Exit: `q` or `Ctrl+c` (`q` is part of the filter while one is open)
 
 ### Message Editor
 

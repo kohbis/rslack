@@ -8,7 +8,7 @@ const BAR: &str = "|";
 const WHITESPACE: &str = " ";
 const HYPHEN: &str = "-";
 const CORNER: &str = "+";
-const USAGE_TABLE: &str = "Select by ← ↓ ↑ → or h j k l, and Enter.";
+const USAGE_TABLE: &str = "Select by ← ↓ ↑ → or h j k l, and Enter. / filters.";
 
 pub struct Table {
     name: String,
