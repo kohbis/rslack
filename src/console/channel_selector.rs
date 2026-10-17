@@ -153,8 +153,7 @@ impl ChannelSelector {
     ) {
         if let Some(grid) = grid.filter(|_| !names.is_empty()) {
             let table = Table::new("CHANNELS".to_string(), names.to_vec(), self.max_col_size);
-            let selected = selected_name(grid);
-            table.draw(stdout, &selected);
+            table.draw_rows(stdout, &grid.rows, &selected_name(grid));
         } else {
             write!(
                 stdout,
