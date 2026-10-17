@@ -32,6 +32,16 @@ async fn run() -> Result<()> {
     let limit = opts.limit.unwrap_or(DEFAULT_MESSAGE_LIMIT);
     let image = opts.image;
     let format = opts.format;
+    let thread = match opts.thread {
+        Some(ts) => {
+            let ts = ts.trim();
+            if ts.is_empty() {
+                bail!("Thread timestamp is empty");
+            }
+            Some(ts.to_string())
+        }
+        None => None,
+    };
 
     if let Some(path) = &image {
         if !path.is_file() {
@@ -105,7 +115,11 @@ async fn run() -> Result<()> {
 
         if needs_editor {
             let mut editor = Editor::new();
-            match editor.run(stdin(), &mut stdout, &channel)? {
+            let title = match &thread {
+                Some(ts) => format!("{channel} (thread {ts})"),
+                None => channel.clone(),
+            };
+            match editor.run(stdin(), &mut stdout, &title)? {
                 EditorResult::Submitted(msg) => message = msg,
                 EditorResult::Cancelled => return Ok(()),
             }
@@ -119,7 +133,14 @@ async fn run() -> Result<()> {
 
     // Read mode: fetch and display messages
     if read_mode {
-        let mut messages = slack_client.get_messages(&channel_info.id, limit).await?;
+        let mut messages = match &thread {
+            Some(ts) => {
+                slack_client
+                    .get_replies(&channel_info.id, ts, limit)
+                    .await?
+            }
+            None => slack_client.get_messages(&channel_info.id, limit).await?,
+        };
         if let Err(err) = slack_client
             .resolve_user_names(&mut messages.messages)
             .await
@@ -136,8 +157,10 @@ async fn run() -> Result<()> {
         }
 
         match format {
-            MessageFormat::Text => print_messages(&channel, &messages.messages),
-            MessageFormat::Table => print_message_table(&channel, &messages.messages),
+            MessageFormat::Text => print_messages(&channel, thread.as_deref(), &messages.messages),
+            MessageFormat::Table => {
+                print_message_table(&channel, thread.as_deref(), &messages.messages)
+            }
         }
         return Ok(());
     }
@@ -145,7 +168,7 @@ async fn run() -> Result<()> {
     // Write mode: post the message or upload the image
     if let Some(path) = &image {
         slack_client
-            .upload_file(&channel_info.id, path, Some(&message))
+            .upload_file(&channel_info.id, path, Some(&message), thread.as_deref())
             .await?;
         println!(
             "[Success] {}\n {}\n {}",
@@ -153,13 +176,22 @@ async fn run() -> Result<()> {
             path.display(),
             message
         );
+        if let Some(ts) = &thread {
+            println!(" thread: {ts}");
+        }
         return Ok(());
     }
 
-    slack_client
-        .post_message(&channel_info.id, &message)
+    let posted = slack_client
+        .post_message(&channel_info.id, &message, thread.as_deref())
         .await?;
     println!("[Success] {}\n {}", channel_heading(&channel), message);
+    if let Some(ts) = &posted.ts {
+        println!(" ts: {ts}");
+    }
+    if let Some(ts) = &thread {
+        println!(" thread: {ts}");
+    }
 
     Ok(())
 }

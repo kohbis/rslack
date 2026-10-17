@@ -11,6 +11,7 @@
 - Interactive channel selection with vim-like navigation (h,j,k,l or arrow keys) and `/` to filter by name, including private channels and direct messages the token can see
 - Multi-line message editor with cursor movement
 - **Read messages from channels** (latest N messages, default: 10)
+- **Read and reply in a thread** (`--thread` takes the message `ts`)
 - **Upload images to channels** (with an optional comment)
 - Command-line options for direct channel and message specification
 - Simple configuration via environment variables or config file
@@ -135,6 +136,12 @@ rslack -r -c general -l 20
 # Read messages as a table
 rslack -r -c general --format table
 
+# Read a thread. Text output prints each message's ts; pass the parent's ts.
+rslack -r -c general --thread 1609459800.000100
+
+# Reply in that thread (omit -m to use the editor)
+rslack -c general --thread 1609459800.000100 -m "了解です"
+
 # Upload an image (the message is optional and posted as its comment)
 rslack -c general -i ./screenshot.png -m "Look at this"
 ```
@@ -146,6 +153,7 @@ Options:
 - `-l, --limit <LIMIT>`: Number of messages to fetch (default: 10)
 - `-f, --format <FORMAT>`: Format of messages read with `-r`: `text` (default) or `table`
 - `-i, --image <IMAGE>`: Image file to upload (cannot be combined with `-r`)
+- `-t, --thread <TS>`: Thread timestamp to read (`-r`) or reply in. A successful post prints the new message `ts`
 
 ## Development
 
