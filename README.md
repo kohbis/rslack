@@ -10,7 +10,7 @@
 
 - Interactive channel selection with vim-like navigation (h,j,k,l or arrow keys) and `/` to filter by name, including private channels and direct messages the token can see
 - Multi-line message editor with cursor movement
-- **Read messages from channels** (latest N messages, default: 10)
+- **Read messages from channels** (latest N messages, default: 10; `--format json` for scripts)
 - **Read and reply in a thread** (`--thread` takes the message `ts`)
 - **Upload images to channels** (with an optional comment)
 - Command-line options for direct channel and message specification
@@ -136,6 +136,10 @@ rslack -r -c general -l 20
 # Read messages as a table
 rslack -r -c general --format table
 
+# Read messages as JSON (oldest first, no other text on stdout).
+# -c is required when stdout is a pipe, so the channel picker is not mixed in.
+rslack -r -c general --format json
+
 # Read a thread. Text output prints each message's ts; pass the parent's ts.
 rslack -r -c general --thread 1609459800.000100
 
@@ -151,7 +155,7 @@ Options:
 - `-m, --message <MESSAGE>`: Specify the message to post (when omitted and stdin is piped, the message is read from stdin)
 - `-r, --read`: Read messages from channel instead of posting
 - `-l, --limit <LIMIT>`: Number of messages to fetch (default: 10)
-- `-f, --format <FORMAT>`: Format of messages read with `-r`: `text` (default) or `table`
+- `-f, --format <FORMAT>`: Format of messages read with `-r`: `text` (default), `table`, or `json`
 - `-i, --image <IMAGE>`: Image file to upload (cannot be combined with `-r`)
 - `-t, --thread <TS>`: Thread timestamp to read (`-r`) or reply in. A successful post prints the new message `ts`
 
