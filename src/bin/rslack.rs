@@ -7,7 +7,8 @@ use termion::screen::IntoAlternateScreen;
 
 use rslack::config::{Config, SLACK_URL};
 use rslack::console::{
-    print_message_table, print_messages, ChannelSelector, Editor, EditorResult, SelectionResult,
+    channel_heading, print_message_table, print_messages, ChannelSelector, Editor, EditorResult,
+    SelectionResult,
 };
 use rslack::option::{read_message, MessageFormat, Opt, DEFAULT_MESSAGE_LIMIT};
 use rslack::slack;
@@ -53,10 +54,13 @@ async fn run() -> Result<()> {
     let slack_client = slack::SlackClient::new(&config, SLACK_URL);
     let mut channels = slack_client.get_channels().await?;
     if !channels.unavailable.is_empty() {
-        eprintln!(
-            "[Warning] Not listing {}: the token is missing the scope",
-            channels.unavailable.join(", ")
-        );
+        let kinds = channels
+            .unavailable
+            .iter()
+            .map(|kind| slack::conversation_type_label(kind))
+            .collect::<Vec<_>>()
+            .join(", ");
+        eprintln!("[Warning] Not listing {kinds}: the token is missing the scope");
     }
     if let Err(err) = slack_client
         .resolve_direct_message_names(&mut channels.channels)
@@ -143,14 +147,19 @@ async fn run() -> Result<()> {
         slack_client
             .upload_file(&channel_info.id, path, Some(&message))
             .await?;
-        println!("[Success] #{}\n {}\n {}", channel, path.display(), message);
+        println!(
+            "[Success] {}\n {}\n {}",
+            channel_heading(&channel),
+            path.display(),
+            message
+        );
         return Ok(());
     }
 
     slack_client
         .post_message(&channel_info.id, &message)
         .await?;
-    println!("[Success] #{}\n {}", channel, message);
+    println!("[Success] {}\n {}", channel_heading(&channel), message);
 
     Ok(())
 }

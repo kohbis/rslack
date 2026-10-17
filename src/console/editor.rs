@@ -85,10 +85,10 @@ impl Editor {
     pub fn draw_header(&self, stdout: &mut dyn Write, channel: &str) {
         write!(
             stdout,
-            "{}{}#{}{}{}{}",
+            "{}{}{}{}{}{}",
             termion::cursor::Goto(1, 1),
             termion::clear::All,
-            channel,
+            super::message_viewer::channel_heading(channel),
             termion::cursor::Goto(1, 2),
             USAGE_EDITOR,
             termion::cursor::Goto(1, MESSAGE_ROW)

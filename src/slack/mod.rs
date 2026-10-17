@@ -33,6 +33,17 @@ const CHANNELS_PER_PAGE: &str = "200";
 /// Public channels, private channels, group DMs, and direct messages
 const CONVERSATION_TYPES: &str = "public_channel,private_channel,mpim,im";
 
+/// Name of a `conversations.list` type for a warning.
+pub fn conversation_type_label(kind: &str) -> &str {
+    match kind {
+        "public_channel" => "public channels",
+        "private_channel" => "private channels",
+        "mpim" => "group direct messages",
+        "im" => "direct messages",
+        other => other,
+    }
+}
+
 pub struct SlackChannels {
     pub channels: Vec<SlackChannel>,
     /// Conversation types left out because the token lacks the scope
@@ -715,6 +726,16 @@ mod tests {
 
         let not_found = slack_channels.find_by_name("banana");
         assert!(not_found.is_none());
+    }
+
+    #[test]
+    fn it_conversation_type_label() {
+        assert_eq!(
+            conversation_type_label("private_channel"),
+            "private channels"
+        );
+        assert_eq!(conversation_type_label("im"), "direct messages");
+        assert_eq!(conversation_type_label("mpim"), "group direct messages");
     }
 
     #[test]
