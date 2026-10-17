@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.6.3](https://github.com/kohbis/rslack/compare/v0.6.2...v0.6.3) (2026-10-17)
+
+
+### Features
+
+* filter the channel list by name ([c36ec84](https://github.com/kohbis/rslack/commit/c36ec84032b66b7ca7aed9036335fea04d1fc717))
+* filter the channel list by name ([3f20282](https://github.com/kohbis/rslack/commit/3f202821921e30ddcbb3c76cce901b6b56a914f6))
+* list private channels and direct messages ([fd040ff](https://github.com/kohbis/rslack/commit/fd040ff70cb293606d2d1ac7cb29bc28e78a3e3c))
+* list private channels and direct messages ([e4d2c3a](https://github.com/kohbis/rslack/commit/e4d2c3ab570cb1228918955c3e4df14ca2fe51a1))
+* print read messages as JSON ([d22f52f](https://github.com/kohbis/rslack/commit/d22f52f2f600266ff11e8fb4f98b3716eb6a17e2))
+* print read messages as JSON ([1964713](https://github.com/kohbis/rslack/commit/1964713fdcfa9a7276773115db0bc6c6716a41f5))
+* read and reply in a thread ([ce1dac6](https://github.com/kohbis/rslack/commit/ce1dac6fe1d027877be86b3c2cf241a59ba842b5))
+* read and reply in a thread ([e575b57](https://github.com/kohbis/rslack/commit/e575b575d90c0360a36e6fcf129c2f99ea664de0))
+
+
+### Bug Fixes
+
+* draw the channel grid from the rows the cursor indexes ([4244540](https://github.com/kohbis/rslack/commit/4244540c946c8e33b4fdd27964c65a81dbd4d57f))
+* print direct-message labels without a leading hash ([5e31d5b](https://github.com/kohbis/rslack/commit/5e31d5bb0adf376250364d7bcfff0e4168d8f2fd))
+
 ## [0.6.2](https://github.com/kohbis/rslack/compare/v0.6.1...v0.6.2) (2026-10-17)
 
 
