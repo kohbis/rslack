@@ -1300,12 +1300,9 @@ dependencies = [
 
 [[package]]
 name = "rpos"
-version = "0.5.0"
+version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fae12068ffba863b6d23ca175d7de2efe367a3ad3440c9e0544ad088c0e4599f"
-dependencies = [
- "anyhow",
-]
+checksum = "1ad89e44721996f9aea6a769ecc1f16eeaa9e3426dd52509e7972d3036692cc4"
 
 [[package]]
 name = "rslack"
