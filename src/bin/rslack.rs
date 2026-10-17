@@ -7,8 +7,8 @@ use termion::screen::IntoAlternateScreen;
 
 use rslack::config::{Config, SLACK_URL};
 use rslack::console::{
-    channel_heading, print_message_table, print_messages, ChannelSelector, Editor, EditorResult,
-    SelectionResult,
+    channel_heading, print_message_table, print_messages, print_messages_json, ChannelSelector,
+    Editor, EditorResult, SelectionResult,
 };
 use rslack::option::{read_message, MessageFormat, Opt, DEFAULT_MESSAGE_LIMIT};
 use rslack::slack;
@@ -100,6 +100,10 @@ async fn run() -> Result<()> {
         }
         bail!("Channel '{}' not found", channel);
     }
+    // The selector writes the alternate screen to stdout, which would prefix the JSON
+    if needs_selection && matches!(format, MessageFormat::Json) && !termion::is_tty(&stdout()) {
+        bail!("Specify a channel with -c when stdout is not a terminal");
+    }
     // The comment is optional when uploading an image
     let needs_editor = !read_mode && image.is_none() && Editor::needs_input(&message);
     if needs_selection || needs_editor {
@@ -161,6 +165,7 @@ async fn run() -> Result<()> {
             MessageFormat::Table => {
                 print_message_table(&channel, thread.as_deref(), &messages.messages)
             }
+            MessageFormat::Json => print_messages_json(&messages.messages)?,
         }
         return Ok(());
     }

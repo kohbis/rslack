@@ -5,5 +5,7 @@ mod table;
 
 pub use channel_selector::{ChannelSelector, SelectionResult};
 pub use editor::{Editor, EditorResult};
-pub use message_viewer::{channel_heading, print_message_table, print_messages};
+pub use message_viewer::{
+    channel_heading, print_message_table, print_messages, print_messages_json,
+};
 pub use table::Table;

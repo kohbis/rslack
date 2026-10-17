@@ -15,6 +15,8 @@ pub enum MessageFormat {
     Text,
     /// A table with DATE, USER and MESSAGE columns
     Table,
+    /// A JSON array, oldest message first, with no extra text
+    Json,
 }
 
 #[derive(Parser)]
@@ -111,6 +113,8 @@ mod tests {
         assert_eq!(opts.format, MessageFormat::Table);
         let opts = Opt::parse_from(["rslack", "-r", "-f", "text"]);
         assert_eq!(opts.format, MessageFormat::Text);
+        let opts = Opt::parse_from(["rslack", "-r", "--format", "json"]);
+        assert_eq!(opts.format, MessageFormat::Json);
     }
 
     #[test]

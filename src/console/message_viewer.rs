@@ -1,8 +1,10 @@
+use anyhow::Result;
 use chrono::{Local, TimeZone};
+use serde::Serialize;
 use unicode_width::UnicodeWidthStr;
 
 use super::table::{border, pad, term_size, truncate, wrap};
-use crate::slack::SlackMessage;
+use crate::slack::{SlackFile, SlackMessage};
 
 /// Widest the USER column gets; longer names are truncated
 const MAX_USER_WIDTH: usize = 20;
@@ -34,6 +36,56 @@ pub fn print_messages(channel_name: &str, thread_ts: Option<&str>, messages: &[S
         }
         println!();
     }
+}
+
+/// Print messages as a JSON array on stdout, oldest first, with no other text
+pub fn print_messages_json(messages: &[SlackMessage]) -> Result<()> {
+    serde_json::to_writer_pretty(std::io::stdout(), &json_messages(messages))?;
+    println!();
+    Ok(())
+}
+
+#[derive(Serialize)]
+struct JsonFile<'a> {
+    name: Option<&'a str>,
+    mimetype: Option<&'a str>,
+    permalink: Option<&'a str>,
+}
+
+#[derive(Serialize)]
+struct JsonMessage<'a> {
+    ts: &'a str,
+    thread_ts: Option<&'a str>,
+    user: Option<&'a str>,
+    user_name: Option<&'a str>,
+    text: &'a str,
+    reply_count: Option<u32>,
+    files: Vec<JsonFile<'a>>,
+}
+
+fn json_file(file: &SlackFile) -> JsonFile<'_> {
+    JsonFile {
+        name: file.name.as_deref(),
+        mimetype: file.mimetype.as_deref(),
+        permalink: file.permalink.as_deref(),
+    }
+}
+
+/// Oldest first, matching the text and table output
+fn json_messages(messages: &[SlackMessage]) -> Vec<JsonMessage<'_>> {
+    messages
+        .iter()
+        .rev()
+        .map(|message| JsonMessage {
+            ts: &message.ts,
+            thread_ts: message.thread_ts.as_deref(),
+            user: message.user.as_deref(),
+            user_name: message.user_name.as_deref(),
+            text: &message.text,
+            reply_count: message.reply_count,
+            files: message.files.iter().map(json_file).collect(),
+        })
+        .collect()
 }
 
 /// Print messages to stdout as a table (non-interactive)
@@ -249,6 +301,42 @@ mod tests {
         assert_eq!(
             history_heading("@alice", Some("1609459800.000100"), 1),
             "@alice - Thread 1609459800.000100 (1 messages)"
+        );
+    }
+
+    #[test]
+    fn json_messages_are_oldest_first() {
+        let mut latest: SlackMessage = serde_json::from_str(
+            r#"{"user":"U2","ts":"1609459700.000090","text":"later","thread_ts":"1609459600.000080","reply_count":2,"files":[{"name":"a.png","mimetype":"image/png"}]}"#,
+        )
+        .unwrap();
+        latest.user_name = Some("bob".to_string());
+        let earlier: SlackMessage =
+            serde_json::from_str(r#"{"user":"U1","ts":"1609459600.000080","text":"earlier"}"#)
+                .unwrap();
+        let value = serde_json::to_value(json_messages(&[latest, earlier])).unwrap();
+        assert_eq!(
+            value,
+            serde_json::json!([
+                {
+                    "ts": "1609459600.000080",
+                    "thread_ts": null,
+                    "user": "U1",
+                    "user_name": null,
+                    "text": "earlier",
+                    "reply_count": null,
+                    "files": []
+                },
+                {
+                    "ts": "1609459700.000090",
+                    "thread_ts": "1609459600.000080",
+                    "user": "U2",
+                    "user_name": "bob",
+                    "text": "later",
+                    "reply_count": 2,
+                    "files": [{"name": "a.png", "mimetype": "image/png", "permalink": null}]
+                }
+            ])
         );
     }
 
