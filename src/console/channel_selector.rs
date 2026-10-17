@@ -2,7 +2,7 @@ use std::io::{Read, Write};
 
 use anyhow::Result;
 use rpos::table::Table as RposTable;
-use rpos::WrapMode;
+use rpos::{VerticalPolicy, WrapMode};
 use termion::event::Key;
 use termion::input::TermRead;
 
@@ -47,9 +47,9 @@ impl ChannelSelector {
             .iter()
             .map(|row| row.len())
             .collect::<Vec<usize>>();
-        let num_rows = widths.len();
-        let mut cursor = RposTable::new_jagged(widths.clone())?
+        let mut cursor = RposTable::new_jagged(widths)?
             .wrap_mode(WrapMode::Wrap)
+            .vertical_policy(VerticalPolicy::SkipMissing)
             .cursor;
 
         let mut selected = chunked_data[cursor.current().0][cursor.current().1].to_string();
@@ -66,28 +66,10 @@ impl ChannelSelector {
                     cursor.right();
                 }
                 Key::Up | Key::Char('k') => {
-                    let (row, col) = cursor.current();
-                    // NOTE: Skip rows that don't have the current column
-                    //       rpos's cursor.up() does not handle jagged tables well in this case
-                    for i in 1..num_rows {
-                        let target = (row + num_rows - i) % num_rows;
-                        if widths[target] > col {
-                            let _ = cursor.set(target, col);
-                            break;
-                        }
-                    }
+                    cursor.up();
                 }
                 Key::Down | Key::Char('j') => {
-                    let (row, col) = cursor.current();
-                    // NOTE: Skip rows that don't have the current column
-                    //       rpos's cursor.down() does not handle jagged tables well in this case
-                    for i in 1..num_rows {
-                        let target = (row + i) % num_rows;
-                        if widths[target] > col {
-                            let _ = cursor.set(target, col);
-                            break;
-                        }
-                    }
+                    cursor.down();
                 }
                 _ => {}
             }
