@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.4](https://github.com/kohbis/rslack/compare/v0.6.3...v0.6.4) (2026-10-17)
+
+
+### Miscellaneous Chores
+
+* **deps:** bump rpos from 0.5 to 0.7 ([#651](https://github.com/kohbis/rslack/issues/651)) ([dd174a1](https://github.com/kohbis/rslack/commit/dd174a10b3e2725cc3189a944e3980d5796edde0))
+
 ## [0.6.3](https://github.com/kohbis/rslack/compare/v0.6.2...v0.6.3) (2026-10-17)
 
 
