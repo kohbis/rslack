@@ -19,6 +19,10 @@ pub struct SlackResponse {
     pub file_id: Option<String>,
     pub user: Option<SlackUser>,
     pub response_metadata: Option<ResponseMetadata>,
+    /// Timestamp of a message posted with `chat.postMessage`
+    pub ts: Option<String>,
+    /// Parent timestamp when that message is a thread reply
+    pub thread_ts: Option<String>,
 }
 
 /// Pagination info of list methods such as conversations.list
@@ -32,6 +36,9 @@ const CHANNELS_PER_PAGE: &str = "200";
 
 /// Public channels, private channels, group DMs, and direct messages
 const CONVERSATION_TYPES: &str = "public_channel,private_channel,mpim,im";
+
+/// Replies fetched per conversations.replies call. Pages are oldest first.
+const REPLIES_PER_PAGE: &str = "200";
 
 /// Name of a `conversations.list` type for a warning.
 pub fn conversation_type_label(kind: &str) -> &str {
@@ -131,6 +138,12 @@ pub struct SlackMessage {
     pub text: String,
     pub user: Option<String>,
     pub ts: String,
+    /// Set on a thread reply, and on a parent that has replies
+    #[serde(default)]
+    pub thread_ts: Option<String>,
+    /// Number of replies when this message is a thread parent
+    #[serde(default)]
+    pub reply_count: Option<u32>,
     /// Attached files (images, etc.)
     #[serde(default)]
     pub files: Vec<SlackFile>,
@@ -345,9 +358,17 @@ impl SlackClient {
     /*
      * Post slack message.
      */
-    pub async fn post_message(&self, channel: &str, text: &str) -> Result<SlackResponse> {
-        self.post("chat.postMessage", &[("channel", channel), ("text", text)])
-            .await
+    pub async fn post_message(
+        &self,
+        channel: &str,
+        text: &str,
+        thread_ts: Option<&str>,
+    ) -> Result<SlackResponse> {
+        let mut form = vec![("channel", channel), ("text", text)];
+        if let Some(thread_ts) = thread_ts {
+            form.push(("thread_ts", thread_ts));
+        }
+        self.post("chat.postMessage", &form).await
     }
 
     /*
@@ -365,6 +386,47 @@ impl SlackClient {
             Some(messages) => Ok(SlackMessages::from(messages)),
             None => Err(anyhow!("No messages found")),
         }
+    }
+
+    /*
+     * Get the latest replies in a thread (conversations.replies).
+     * Pages are oldest first, so follow the cursor and keep the tail, then reverse
+     * to match conversations.history. The viewer prints that newest-first list oldest first.
+     */
+    pub async fn get_replies(
+        &self,
+        channel_id: &str,
+        thread_ts: &str,
+        limit: usize,
+    ) -> Result<SlackMessages> {
+        let mut collected = vec![];
+        let mut cursor: Option<String> = None;
+        loop {
+            let mut query = vec![
+                ("channel", channel_id),
+                ("ts", thread_ts),
+                ("limit", REPLIES_PER_PAGE),
+            ];
+            if let Some(cursor) = &cursor {
+                query.push(("cursor", cursor));
+            }
+            let res = self.get("conversations.replies", &query).await?;
+            collected.extend(res.messages.unwrap_or_default());
+            cursor = res
+                .response_metadata
+                .and_then(|metadata| metadata.next_cursor)
+                .filter(|next_cursor| !next_cursor.is_empty());
+            if cursor.is_none() {
+                break;
+            }
+        }
+        if collected.is_empty() {
+            return Err(anyhow!("No messages found"));
+        }
+        let start = collected.len().saturating_sub(limit);
+        let mut messages = collected.split_off(start);
+        messages.reverse();
+        Ok(SlackMessages::from(messages))
     }
 
     /*
@@ -425,6 +487,7 @@ impl SlackClient {
         channel_id: &str,
         path: &Path,
         comment: Option<&str>,
+        thread_ts: Option<&str>,
     ) -> Result<SlackResponse> {
         let filename = path
             .file_name()
@@ -460,6 +523,9 @@ impl SlackClient {
         let mut body = vec![("files", files.as_str()), ("channel_id", channel_id)];
         if let Some(comment) = comment.filter(|c| !c.trim().is_empty()) {
             body.push(("initial_comment", comment));
+        }
+        if let Some(thread_ts) = thread_ts.filter(|ts| !ts.trim().is_empty()) {
+            body.push(("thread_ts", thread_ts));
         }
         self.post("files.completeUploadExternal", &body).await
     }
@@ -894,6 +960,120 @@ mod tests {
         );
     }
 
+    #[tokio::test]
+    #[serial]
+    async fn it_get_replies_newest_first() {
+        let mut server = mockito::Server::new_async().await;
+        let replies = server
+            .mock("GET", "/api/conversations.replies")
+            .match_query(mockito::Matcher::AllOf(vec![
+                mockito::Matcher::UrlEncoded("channel".into(), "C0123456789".into()),
+                mockito::Matcher::UrlEncoded("ts".into(), "1609459800.000100".into()),
+                mockito::Matcher::UrlEncoded("limit".into(), "200".into()),
+            ]))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{"ok":true,"messages":[
+                    {"user":"U1","text":"parent","ts":"1609459800.000100","reply_count":1,"thread_ts":"1609459800.000100"},
+                    {"user":"U2","text":"reply","ts":"1609459900.000200","thread_ts":"1609459800.000100"}
+                ]}"#,
+            )
+            .create_async()
+            .await;
+
+        std::env::set_var("RSLACK_TOKEN", "test-token");
+        let config = Config::new(None).unwrap();
+        let slack_client = SlackClient::new(&config, &server.url());
+        let messages = slack_client
+            .get_replies("C0123456789", "1609459800.000100", 10)
+            .await
+            .unwrap();
+        assert_eq!(
+            messages
+                .messages
+                .iter()
+                .map(|m| m.text.as_str())
+                .collect::<Vec<_>>(),
+            ["reply", "parent"]
+        );
+        assert_eq!(messages.messages[1].reply_count, Some(1));
+        replies.assert_async().await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn it_get_replies_keeps_the_latest_page() {
+        let mut server = mockito::Server::new_async().await;
+        let first = server
+            .mock("GET", "/api/conversations.replies")
+            .match_query(mockito::Matcher::Regex("limit=200$".into()))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{"ok":true,"messages":[
+                    {"text":"parent","ts":"1"},
+                    {"text":"old","ts":"2"}
+                ],"response_metadata":{"next_cursor":"page2"}}"#,
+            )
+            .expect(1)
+            .create_async()
+            .await;
+        let second = server
+            .mock("GET", "/api/conversations.replies")
+            .match_query(mockito::Matcher::UrlEncoded(
+                "cursor".into(),
+                "page2".into(),
+            ))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(
+                r#"{"ok":true,"messages":[
+                    {"text":"new","ts":"3"}
+                ],"response_metadata":{"next_cursor":""}}"#,
+            )
+            .expect(1)
+            .create_async()
+            .await;
+
+        std::env::set_var("RSLACK_TOKEN", "test-token");
+        let config = Config::new(None).unwrap();
+        let slack_client = SlackClient::new(&config, &server.url());
+        let messages = slack_client.get_replies("C1", "1", 1).await.unwrap();
+        assert_eq!(messages.messages[0].text, "new");
+        first.assert_async().await;
+        second.assert_async().await;
+    }
+
+    #[tokio::test]
+    #[serial]
+    async fn it_post_message_in_thread() {
+        let mut server = mockito::Server::new_async().await;
+        let posted = server
+            .mock("POST", "/api/chat.postMessage")
+            .match_body(mockito::Matcher::AllOf(vec![
+                mockito::Matcher::UrlEncoded("channel".into(), "C0123456789".into()),
+                mockito::Matcher::UrlEncoded("text".into(), "了解です".into()),
+                mockito::Matcher::UrlEncoded("thread_ts".into(), "1609459800.000100".into()),
+            ]))
+            .with_status(200)
+            .with_header("content-type", "application/json")
+            .with_body(r#"{"ok":true,"ts":"1609459900.000200","thread_ts":"1609459800.000100"}"#)
+            .create_async()
+            .await;
+
+        std::env::set_var("RSLACK_TOKEN", "test-token");
+        let config = Config::new(None).unwrap();
+        let slack_client = SlackClient::new(&config, &server.url());
+        let res = slack_client
+            .post_message("C0123456789", "了解です", Some("1609459800.000100"))
+            .await
+            .unwrap();
+        assert_eq!(res.ts.as_deref(), Some("1609459900.000200"));
+        assert_eq!(res.thread_ts.as_deref(), Some("1609459800.000100"));
+        posted.assert_async().await;
+    }
+
     #[test]
     fn it_get_user_display_name() {
         let user = |display_name: &str, real_name: Option<&str>| SlackUser {
@@ -1042,6 +1222,8 @@ mod tests {
             text: "hi".to_string(),
             user: user.map(str::to_string),
             ts: "1609459800.000100".to_string(),
+            thread_ts: None,
+            reply_count: None,
             files: vec![],
             user_name: None,
         }
@@ -1095,6 +1277,7 @@ mod tests {
                 "C0123456789",
                 Path::new("tests/fixtures/image/image.png"),
                 Some("look"),
+                None,
             )
             .await
             .unwrap();
@@ -1123,6 +1306,7 @@ mod tests {
             .upload_file(
                 "C0123456789",
                 Path::new("tests/fixtures/image/image.png"),
+                None,
                 None,
             )
             .await;

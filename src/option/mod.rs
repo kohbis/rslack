@@ -41,6 +41,10 @@ pub struct Opt {
     #[arg(short, long, conflicts_with = "read")]
     pub image: Option<PathBuf>,
 
+    /// Thread timestamp (`ts`) to read or reply in
+    #[arg(short = 't', long)]
+    pub thread: Option<String>,
+
     /// Format of messages read with --read
     #[arg(short, long, value_enum, default_value_t, requires = "read")]
     pub format: MessageFormat,
@@ -73,6 +77,7 @@ mod tests {
                 read: false,
                 limit: None,
                 image: None,
+                thread: None,
                 format: MessageFormat::Text,
             },
             Opt::parse_from::<[&str; 0], &str>([]),
@@ -131,5 +136,14 @@ mod tests {
     #[test]
     fn argument_with_image_and_read_conflicts() {
         assert!(Opt::try_parse_from(["rslack", "-r", "-i", "image.png"]).is_err());
+    }
+
+    #[test]
+    fn argument_with_thread() {
+        let opts = Opt::parse_from(["rslack", "-c", "general", "-t", "1609459800.000100"]);
+        assert_eq!(opts.thread, Some("1609459800.000100".to_string()));
+        let opts = Opt::parse_from(["rslack", "-r", "--thread", "1609459800.000100"]);
+        assert!(opts.read);
+        assert_eq!(opts.thread, Some("1609459800.000100".to_string()));
     }
 }

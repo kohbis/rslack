@@ -18,20 +18,17 @@ pub fn channel_heading(name: &str) -> String {
     }
 }
 
-/// Print messages to stdout (non-interactive, simple format)
-pub fn print_messages(channel_name: &str, messages: &[SlackMessage]) {
+/// Print messages to stdout (non-interactive, simple format).
+/// `thread_ts` is set when these messages are one thread.
+pub fn print_messages(channel_name: &str, thread_ts: Option<&str>, messages: &[SlackMessage]) {
     println!(
-        "{} - Latest {} messages",
-        channel_heading(channel_name),
-        messages.len()
+        "{}",
+        history_heading(channel_name, thread_ts, messages.len())
     );
     println!("{}", "─".repeat(60));
 
     for message in messages.iter().rev() {
-        let timestamp = format_timestamp(&message.ts);
-        let user = message.author();
-
-        println!("[{}] {}", timestamp, user);
+        println!("{}", message_header(message));
         for line in message_lines(message) {
             println!("  {}", line);
         }
@@ -40,15 +37,32 @@ pub fn print_messages(channel_name: &str, messages: &[SlackMessage]) {
 }
 
 /// Print messages to stdout as a table (non-interactive)
-pub fn print_message_table(channel_name: &str, messages: &[SlackMessage]) {
+pub fn print_message_table(channel_name: &str, thread_ts: Option<&str>, messages: &[SlackMessage]) {
     println!(
-        "{} - Latest {} messages",
-        channel_heading(channel_name),
-        messages.len()
+        "{}",
+        history_heading(channel_name, thread_ts, messages.len())
     );
     for line in message_table(messages, term_size().0 as usize) {
         println!("{}", line);
     }
+}
+
+fn history_heading(channel_name: &str, thread_ts: Option<&str>, count: usize) -> String {
+    let channel = channel_heading(channel_name);
+    match thread_ts {
+        Some(ts) => format!("{channel} - Thread {ts} ({count} messages)"),
+        None => format!("{channel} - Latest {count} messages"),
+    }
+}
+
+/// Header line: local time, author, and the `ts` passed to `--thread`
+fn message_header(message: &SlackMessage) -> String {
+    format!(
+        "[{}] {}  {}",
+        format_timestamp(&message.ts),
+        message.author(),
+        message.ts
+    )
 }
 
 /// Render messages, oldest first, as table lines that fit in `width` columns
@@ -113,12 +127,17 @@ fn message_lines(message: &SlackMessage) -> Vec<String> {
             None => format!("[{}] {}", kind, name),
         }
     });
-    message
+    let mut lines: Vec<String> = message
         .text
         .lines()
         .map(str::to_string)
         .chain(files)
-        .collect()
+        .collect();
+    if let Some(count) = message.reply_count.filter(|count| *count > 0) {
+        let noun = if count == 1 { "reply" } else { "replies" };
+        lines.push(format!("({count} {noun})"));
+    }
+    lines
 }
 
 fn format_timestamp(ts: &str) -> String {
@@ -215,6 +234,44 @@ mod tests {
         let lines = message_table(&messages, 0);
         assert_eq!(lines.len(), 5);
         assert!(lines[3].contains("| unknown | "));
+    }
+
+    #[test]
+    fn history_heading_for_a_thread() {
+        assert_eq!(
+            history_heading("general", None, 2),
+            "#general - Latest 2 messages"
+        );
+        assert_eq!(
+            history_heading("general", Some("1609459800.000100"), 2),
+            "#general - Thread 1609459800.000100 (2 messages)"
+        );
+        assert_eq!(
+            history_heading("@alice", Some("1609459800.000100"), 1),
+            "@alice - Thread 1609459800.000100 (1 messages)"
+        );
+    }
+
+    #[test]
+    fn message_header_includes_ts() {
+        let message: SlackMessage =
+            serde_json::from_str(r#"{"user":"U0123456789","ts":"1609459800.000100","text":"hi"}"#)
+                .unwrap();
+        let header = message_header(&message);
+        assert!(header.ends_with("  1609459800.000100"));
+        assert!(header.contains("U0123456789"));
+    }
+
+    #[test]
+    fn message_lines_with_reply_count() {
+        let one: SlackMessage =
+            serde_json::from_str(r#"{"ts":"1609459800.000100","text":"hi","reply_count":1}"#)
+                .unwrap();
+        assert_eq!(message_lines(&one), ["hi", "(1 reply)"]);
+        let many: SlackMessage =
+            serde_json::from_str(r#"{"ts":"1609459800.000100","text":"hi","reply_count":3}"#)
+                .unwrap();
+        assert_eq!(message_lines(&many), ["hi", "(3 replies)"]);
     }
 
     #[test]
