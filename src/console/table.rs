@@ -8,7 +8,7 @@ const BAR: &str = "|";
 const WHITESPACE: &str = " ";
 const HYPHEN: &str = "-";
 const CORNER: &str = "+";
-const USAGE_TABLE: &str = "Select by ← ↓ ↑ → or h j k l, and Enter.";
+const USAGE_TABLE: &str = "Select by ← ↓ ↑ → or h j k l, and Enter. / filters.";
 
 pub struct Table {
     name: String,
@@ -102,6 +102,12 @@ impl Table {
      * Print data as table.
      */
     pub fn draw(&self, stdout: &mut dyn Write, selected: &str) {
+        let rows = self.chunked_data();
+        self.draw_rows(stdout, &rows, selected);
+    }
+
+    /// Print `rows` as they are, without chunking again from the terminal width.
+    pub fn draw_rows(&self, stdout: &mut dyn Write, rows: &[Vec<String>], selected: &str) {
         write!(
             stdout,
             "{}{}",
@@ -110,8 +116,12 @@ impl Table {
         )
         .unwrap();
 
-        let rows: Vec<Vec<String>> = self
-            .chunked_data()
+        if rows.is_empty() {
+            stdout.flush().unwrap();
+            return;
+        }
+
+        let painted: Vec<Vec<String>> = rows
             .iter()
             .map(|names| {
                 names
@@ -146,8 +156,8 @@ impl Table {
 
         // Each cell is a leading space and the padded channel name
         let row_border = |row: &Vec<String>| border(&vec![self.max_col_size + 1; row.len()]);
-        self.print_head_channels(stdout, &row_border(&rows[0]));
-        for row in &rows {
+        self.print_head_channels(stdout, &row_border(&painted[0]));
+        for row in &painted {
             Self::print_row(stdout, &row.join(BAR));
             Self::print_line(stdout, &row_border(row));
         }
@@ -189,8 +199,19 @@ impl Table {
 }
 
 #[cfg(test)]
+#[cfg(test)]
 mod tests {
     use super::*;
+
+    fn strip_escapes(out: &[u8]) -> String {
+        let out = String::from_utf8(out.to_vec()).unwrap();
+        out.split('\x1b')
+            .map(|part| match part.find(|c: char| c.is_ascii_alphabetic()) {
+                Some(i) if part.starts_with('[') => &part[i + 1..],
+                _ => part,
+            })
+            .collect()
+    }
 
     #[test]
     fn build_table() {
@@ -243,20 +264,38 @@ mod tests {
     }
 
     #[test]
+    fn draw_rows_keeps_the_given_layout() {
+        let table = Table::new(
+            "CH".to_string(),
+            ["a", "b", "c"].map(String::from).to_vec(),
+            3,
+        );
+        let mut out = vec![];
+        table.draw_rows(
+            &mut out,
+            &[
+                vec!["a".to_string(), "b".to_string()],
+                vec!["c".to_string()],
+            ],
+            "b",
+        );
+        let plain = strip_escapes(&out);
+        let lines: Vec<&str> = plain.lines().collect();
+        assert!(lines
+            .iter()
+            .any(|line| line.contains('a') && line.contains('b')));
+        assert!(lines
+            .iter()
+            .any(|line| line.contains('c') && !line.contains('a')));
+    }
+
+    #[test]
     fn draw_channels_with_borders() {
         let data = ["a", "bb", "ccc"].map(String::from).to_vec();
         let table = Table::new("CH".to_string(), data, 3);
         let mut out = vec![];
         table.draw(&mut out, "bb");
-        let out = String::from_utf8(out).unwrap();
-        // Strip the escape sequences for clearing the screen and colors
-        let plain: String = out
-            .split('\x1b')
-            .map(|part| match part.find(|c: char| c.is_ascii_alphabetic()) {
-                Some(i) if part.starts_with('[') => &part[i + 1..],
-                _ => part,
-            })
-            .collect();
+        let plain = strip_escapes(&out);
         assert_eq!(
             plain,
             [
