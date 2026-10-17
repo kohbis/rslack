@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.6.2](https://github.com/kohbis/rslack/compare/v0.6.1...v0.6.2) (2026-10-17)
+
+
+### Features
+
+* post a message piped to stdin ([cce95de](https://github.com/kohbis/rslack/commit/cce95de6465e2423ebe01cd067006bb32e781822))
+* post a message piped to stdin ([fa7a202](https://github.com/kohbis/rslack/commit/fa7a2020fd313e59adf3f2b63dd299986ac18b81))
+
+
+### Miscellaneous Chores
+
+* **deps:** bump serde_json from 1.0.151 to 1.0.154 ([5f77d58](https://github.com/kohbis/rslack/commit/5f77d585a79ee877c16842d0ea426a70447365da))
+* **deps:** bump serde_json from 1.0.151 to 1.0.154 ([545d4f4](https://github.com/kohbis/rslack/commit/545d4f477d67aaef7e1fb5985331cc927bfecc02))
+
+
+### Code Refactoring
+
+* use rpos SkipMissing for jagged channel navigation ([#644](https://github.com/kohbis/rslack/issues/644)) ([cb4bfa0](https://github.com/kohbis/rslack/commit/cb4bfa00f219ee5dfab971e4c0c76cacca84dca2))
+
 ## [0.6.1](https://github.com/kohbis/rslack/compare/v0.6.0...v0.6.1) (2026-10-14)
 
 
