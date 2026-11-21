@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.6.5](https://github.com/kohbis/rslack/compare/v0.6.4...v0.6.5) (2026-11-21)
+
+
+### Miscellaneous Chores
+
+* **deps:** bump clap from 4.6.7 to 4.6.8 ([149f690](https://github.com/kohbis/rslack/commit/149f6908979e723aa9dc8fdaaa4a190c9ed52e94))
+* **deps:** bump clap from 4.6.7 to 4.6.8 ([0e75354](https://github.com/kohbis/rslack/commit/0e75354a108f3df4f4ae03d459144f59d152d3a8))
+* **deps:** bump libc from 0.2.190 to 0.2.191 ([eb539f7](https://github.com/kohbis/rslack/commit/eb539f7eea39027fec0b30e23824b624c319e8aa))
+* **deps:** bump libc from 0.2.190 to 0.2.191 ([75bac8c](https://github.com/kohbis/rslack/commit/75bac8c75a35ee9219e05b5d412b50d8e350b274))
+* **deps:** bump tokio from 1.53.2 to 1.54.1 ([47ee89f](https://github.com/kohbis/rslack/commit/47ee89f8339d93264100c800c2f4f97dc6ad4d4f))
+* **deps:** bump unicode-width from 0.2.2 to 0.2.3 ([ab384ce](https://github.com/kohbis/rslack/commit/ab384cee83547ff62eab6d45929f1fa13d1febc7))
+
+
+### Continuous Integration
+
+* 🎡 pin GitHub Actions to exact versions and add actions lock file ([b047d92](https://github.com/kohbis/rslack/commit/b047d9278d531a80540a71e9e3611c314bf72c1c))
+* 🎡 pin GitHub Actions to exact versions and add actions lock file ([8ab2429](https://github.com/kohbis/rslack/commit/8ab24293d02ede74e175c5bee4bb17d07ba103dd))
+* 🎡 verify the actions lockfile on pull requests ([acdf520](https://github.com/kohbis/rslack/commit/acdf520a712b667125f0cea91902c07d35a786b0))
+* 🎡 verify the actions lockfile on pull requests ([a6c82f5](https://github.com/kohbis/rslack/commit/a6c82f5d166cd5494e2d2e1341507fa44a26d9db))
+
 ## [0.6.4](https://github.com/kohbis/rslack/compare/v0.6.3...v0.6.4) (2026-10-17)
 
 
