@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.6.6](https://github.com/kohbis/rslack/compare/v0.6.5...v0.6.6) (2026-11-26)
+
+
+### Miscellaneous Chores
+
+* **deps:** bump actions/create-github-app-token from 3.3.0 to 3.4.0 ([9482268](https://github.com/kohbis/rslack/commit/94822689f8740ea7137716cb4322de4d4ad5ec15))
+* **deps:** bump actions/create-github-app-token from 3.3.0 to 3.4.0 ([6545ac4](https://github.com/kohbis/rslack/commit/6545ac488a657f9670a61c095e3349cd9b1b4c31))
+* **deps:** bump anyhow from 1.0.104 to 1.0.105 ([5b99320](https://github.com/kohbis/rslack/commit/5b993205ba5be9cd154bef2ce3b9ad707044ddd2))
+* **deps:** bump anyhow from 1.0.104 to 1.0.105 ([680f3a4](https://github.com/kohbis/rslack/commit/680f3a42a2f04199f442e92d5f0aaff2449950a3))
+* **deps:** bump clap from 4.6.8 to 4.6.9 ([c69e650](https://github.com/kohbis/rslack/commit/c69e6500453ae791af1981964a11ce6c376b57cd))
+* **deps:** bump clap from 4.6.8 to 4.6.9 ([be40386](https://github.com/kohbis/rslack/commit/be403861ef857387b12109ced32856fc651a203f))
+* **deps:** bump url from 2.5.8 to 2.5.9 ([8ab53ed](https://github.com/kohbis/rslack/commit/8ab53eddfa7446e8281e87827d6dea24cacc5daf))
+* **deps:** bump url from 2.5.8 to 2.5.9 ([e72f712](https://github.com/kohbis/rslack/commit/e72f7120820f1a3cc3c7bf7bc1d49942b9e6c11b))
+
 ## [0.6.5](https://github.com/kohbis/rslack/compare/v0.6.4...v0.6.5) (2026-11-21)
 
 
